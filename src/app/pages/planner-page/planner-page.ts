@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Navbar } from '../../navbar/navbar';
 import { AuthService } from '../../services/auth.service';
-import { PlannerService, WorkoutExercise, WorkoutDay, DietFoodItem, DietMeal, AiExerciseItem } from '../../services/planner.service';
+import { PlannerService, WorkoutExercise, WorkoutDay, DietFoodItem, DietMeal, AiExerciseItem, sortMealsByTime, parseTimeToMinutes } from '../../services/planner.service';
 import { exportWorkoutPdf, exportDietPdf } from './planner-export.util';
 import { TacoFoodItem, searchTacoFoods, calculateNutrientsForWeight } from '../../services/taco-database';
 
@@ -177,6 +177,19 @@ export class PlannerPage implements OnInit {
     if (!pl || !pl.dieta || pl.dieta.length === 0) return false;
     return this.collapsedMealIds().size === pl.dieta.length;
   });
+
+  // Reordenação e destaque de refeições
+  flashedMealId = signal<string | null>(null);
+  private flashMealTimeout: any = null;
+  private lastCommittedTimeRecord: { mealId: string; time: string; at: number } | null = null;
+
+  draggedMealIndex = signal<number | null>(null);
+  dragOverMealIndex = signal<number | null>(null);
+  hasAskedMealOrderChoice = signal<boolean>(false);
+  mealOrderMode = signal<'horario' | 'manual'>('horario');
+  showMealOrderChoiceModal = signal<boolean>(false);
+  pendingManualDietOrder: DietMeal[] | null = null;
+  pendingMovedMealId: string | null = null;
 
   readonly dietQuickFavorites = [
     { nome: 'Arroz branco', quantidadeG: 150, query: 'arroz tipo 1 cozido' },
@@ -422,10 +435,25 @@ export class PlannerPage implements OnInit {
   isDownloadingPdf = computed(() => this.isDownloadingWorkoutPdf() || this.isDownloadingDietPdf());
 
   ngOnInit() {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const savedMode = localStorage.getItem('macrio_meal_order_mode');
+      if (savedMode === 'manual' || savedMode === 'horario') {
+        this.mealOrderMode.set(savedMode);
+      }
+      const hasAsked = localStorage.getItem('macrio_has_asked_order_mode');
+      if (hasAsked === 'true') {
+        this.hasAskedMealOrderChoice.set(true);
+      }
+    }
+
     this.plannerService.loadPlanner().subscribe((res) => {
       if (res && res.planner) {
         this.standardizeAllWorkoutReps();
         this.populateGoalsForm(res.planner.metasCustomizadas);
+        if (this.mealOrderMode() === 'horario' && res.planner.dieta && res.planner.dieta.length > 0) {
+          const sorted = sortMealsByTime(res.planner.dieta);
+          this.plannerService.planner.update((prev) => (prev ? { ...prev, dieta: sorted } : prev));
+        }
         if (res.planner.dieta && res.planner.dieta.length > 0) {
           this.newFoodForm.patchValue({ selectedMealId: res.planner.dieta[0].id });
         }
@@ -946,26 +974,30 @@ export class PlannerPage implements OnInit {
   }
 
   onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement | null;
+
+    if (this.selectedExerciseId()) {
+      if (!target || (!target.closest('[data-exercise-row]') && !target.closest('.touch-row-actions-bar'))) {
+        this.selectedExerciseId.set(null);
+      }
+    }
+
     if (this.openExerciseMenuId()) {
-      const target = event.target as HTMLElement;
       if (!target || !target.closest('.exercise-menu-container')) {
         this.openExerciseMenuId.set(null);
       }
     }
     if (this.openMealMenuId()) {
-      const target = event.target as HTMLElement;
       if (!target || !target.closest('.meal-card-menu-box')) {
         this.openMealMenuId.set(null);
       }
     }
     if (this.activeObsExerciseId()) {
-      const target = event.target as HTMLElement;
       if (!target || (!target.closest('.obs-popover') && !target.closest('.obs-cell'))) {
         this.saveObsEditing();
       }
     }
     if (!this.activeTooltip()) return;
-    const target = event.target as HTMLElement;
     if (!target) return;
     if (target.closest('.btn-info-discrete') || target.closest('.card-info-tooltip')) {
       return;
@@ -1038,20 +1070,12 @@ export class PlannerPage implements OnInit {
     );
   }
 
-  onRowClick(exerciseId: string, event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (this.isFieldTarget(target)) {
-      // Clicar dentro de um campo edita o campo e também seleciona a linha
-      this.selectedExerciseId.set(exerciseId);
-      return;
-    }
+  onRowPointerDown(exerciseId: string, _event?: PointerEvent) {
+    this.selectedExerciseId.set(exerciseId);
+  }
 
-    // Clicar na linha já selecionada remove a seleção
-    if (this.selectedExerciseId() === exerciseId) {
-      this.selectedExerciseId.set(null);
-    } else {
-      this.selectedExerciseId.set(exerciseId);
-    }
+  onRowClick(exerciseId: string, _event?: MouseEvent) {
+    this.selectedExerciseId.set(exerciseId);
   }
 
   onRowFocusIn(exerciseId: string) {
@@ -1890,6 +1914,179 @@ export class PlannerPage implements OnInit {
     this.plannerService.reorderMeal(mealId, direction);
   }
 
+  onCommitMealTime(mealId: string, newTime: string, event?: Event) {
+    const now = Date.now();
+    const trimmed = (newTime || '').trim();
+
+    if (
+      this.lastCommittedTimeRecord &&
+      this.lastCommittedTimeRecord.mealId === mealId &&
+      this.lastCommittedTimeRecord.time === trimmed &&
+      now - this.lastCommittedTimeRecord.at < 350
+    ) {
+      return;
+    }
+    this.lastCommittedTimeRecord = { mealId, time: trimmed, at: now };
+
+    const pl = this.plannerService.planner();
+    if (!pl || !pl.dieta) return;
+
+    const currentMeal = pl.dieta.find((m) => m.id === mealId);
+    if (!currentMeal) return;
+
+    const oldTime = currentMeal.horario;
+    currentMeal.horario = trimmed;
+
+    if (this.mealOrderMode() === 'horario') {
+      const sorted = sortMealsByTime(pl.dieta);
+      const orderChanged = sorted.some((m, idx) => m.id !== pl.dieta[idx]?.id);
+
+      this.plannerService.planner.update((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          dieta: sorted,
+        };
+      });
+
+      if (orderChanged || oldTime !== trimmed) {
+        this.triggerMealHighlightAndScroll(mealId);
+      }
+    } else {
+      this.plannerService.planner.update((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          dieta: prev.dieta.map((m) => (m.id === mealId ? { ...m, horario: trimmed } : m)),
+        };
+      });
+    }
+  }
+
+  triggerMealHighlightAndScroll(mealId: string) {
+    this.flashedMealId.set(mealId);
+    if (this.flashMealTimeout) {
+      clearTimeout(this.flashMealTimeout);
+    }
+    this.flashMealTimeout = setTimeout(() => {
+      if (this.flashedMealId() === mealId) {
+        this.flashedMealId.set(null);
+      }
+    }, 1200);
+
+    setTimeout(() => {
+      if (typeof document !== 'undefined') {
+        const el = document.getElementById(`meal-card-${mealId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }, 50);
+  }
+
+  onMealDragStart(index: number, event: DragEvent) {
+    this.draggedMealIndex.set(index);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(index));
+    }
+  }
+
+  onMealDragOver(index: number, event: DragEvent) {
+    event.preventDefault();
+    if (this.draggedMealIndex() !== null && this.draggedMealIndex() !== index) {
+      this.dragOverMealIndex.set(index);
+    }
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onMealDragLeave(index: number, event: DragEvent) {
+    if (this.dragOverMealIndex() === index) {
+      this.dragOverMealIndex.set(null);
+    }
+  }
+
+  onMealDragEnd(event: DragEvent) {
+    this.draggedMealIndex.set(null);
+    this.dragOverMealIndex.set(null);
+  }
+
+  onMealDrop(targetIndex: number, event: DragEvent) {
+    event.preventDefault();
+    const fromIndex = this.draggedMealIndex();
+    this.draggedMealIndex.set(null);
+    this.dragOverMealIndex.set(null);
+
+    if (fromIndex === null || fromIndex === targetIndex) return;
+
+    const pl = this.plannerService.planner();
+    if (!pl || !pl.dieta) return;
+
+    const list = [...pl.dieta];
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(targetIndex, 0, moved);
+
+    if (!this.hasAskedMealOrderChoice()) {
+      this.pendingManualDietOrder = list;
+      this.pendingMovedMealId = moved.id;
+      this.showMealOrderChoiceModal.set(true);
+    } else {
+      if (this.mealOrderMode() === 'manual') {
+        this.plannerService.planner.update((prev) => {
+          if (!prev) return prev;
+          return { ...prev, dieta: list };
+        });
+        this.triggerMealHighlightAndScroll(moved.id);
+      } else {
+        const sorted = sortMealsByTime(list);
+        this.plannerService.planner.update((prev) => {
+          if (!prev) return prev;
+          return { ...prev, dieta: sorted };
+        });
+        this.triggerMealHighlightAndScroll(moved.id);
+      }
+    }
+  }
+
+  chooseMealOrderMode(mode: 'manual' | 'horario') {
+    this.hasAskedMealOrderChoice.set(true);
+    this.mealOrderMode.set(mode);
+    this.showMealOrderChoiceModal.set(false);
+
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('macrio_meal_order_mode', mode);
+        localStorage.setItem('macrio_has_asked_order_mode', 'true');
+      } catch (e) {}
+    }
+
+    const pl = this.plannerService.planner();
+    if (!pl || !pl.dieta) return;
+
+    if (mode === 'manual' && this.pendingManualDietOrder) {
+      this.plannerService.planner.update((prev) => {
+        if (!prev) return prev;
+        return { ...prev, dieta: this.pendingManualDietOrder! };
+      });
+      if (this.pendingMovedMealId) {
+        this.triggerMealHighlightAndScroll(this.pendingMovedMealId);
+      }
+    } else {
+      const sorted = sortMealsByTime(pl.dieta);
+      this.plannerService.planner.update((prev) => {
+        if (!prev) return prev;
+        return { ...prev, dieta: sorted };
+      });
+      if (this.pendingMovedMealId) {
+        this.triggerMealHighlightAndScroll(this.pendingMovedMealId);
+      }
+    }
+    this.pendingManualDietOrder = null;
+    this.pendingMovedMealId = null;
+  }
+
   getProgressPct(current: number, target: number): number {
     if (!target || target <= 0) return 0;
     return Math.min(100, Math.round((current / target) * 100));
@@ -2181,6 +2378,7 @@ export class PlannerPage implements OnInit {
   }
 
   onEscapeKey() {
+    this.selectedExerciseId.set(null);
     this.closeDropdowns();
     this.closeQuickAdd();
     this.closeCustomFoodModal();

@@ -439,6 +439,7 @@
                       } @else {
                         @for (ex of activeW.exercicios; track ex.id; let idx = $index) {
                           <tr 
+                            data-exercise-row
                             class="sheet-row exercise-row" 
                             [class.is-selected]="selectedExerciseId() === ex.id"
                             [class.is-editing-obs]="activeObsExerciseId() === ex.id"
@@ -448,6 +449,7 @@
                             tabindex="0"
                             role="row"
                             [draggable]="true"
+                            (pointerdown)="onRowPointerDown(ex.id, $event)"
                             (click)="onRowClick(ex.id, $event)"
                             (focusin)="onRowFocusIn(ex.id)"
                             (dragstart)="onDragStart(idx, $event)"
@@ -1703,7 +1705,13 @@
             @for (meal of pl.dieta; track meal.id; let mIdx = $index) {
               <div 
                 class="meal-card" 
+                [id]="'meal-card-' + meal.id"
                 [class.is-collapsed]="isMealCollapsed(meal.id)"
+                [class.flash-reordered]="flashedMealId() === meal.id"
+                [class.is-drag-over]="dragOverMealIndex() === mIdx"
+                (dragover)="onMealDragOver(mIdx, $event)"
+                (dragleave)="onMealDragLeave(mIdx, $event)"
+                (drop)="onMealDrop(mIdx, $event)"
                 [attr.aria-label]="meal.nome">
                 
                 <!-- Cabeçalho da refeição: nome e horário como ghost inputs, chips eliminados, menu ⋯ -->
@@ -1718,46 +1726,46 @@
                       <mat-icon class="chevron-icon" [class.rotated]="isMealCollapsed(meal.id)">expand_more</mat-icon>
                     </button>
 
-                    <div class="meal-drag-handle-wrap" title="Reordenar refeição">
+                    <div 
+                      class="meal-drag-handle-wrap" 
+                      title="Arraste para reordenar refeição"
+                      draggable="true"
+                      (dragstart)="onMealDragStart(mIdx, $event)"
+                      (dragend)="onMealDragEnd($event)">
                       <mat-icon class="meal-drag-icon">drag_indicator</mat-icon>
-                      <div class="meal-reorder-buttons">
-                        <button 
-                          type="button" 
-                          class="btn-micro-reorder" 
-                          [disabled]="mIdx === 0"
-                          (click)="moveMeal(meal.id, 'up', $event)" 
-                          title="Mover refeição para cima">
-                          <mat-icon>arrow_drop_up</mat-icon>
-                        </button>
-                        <button 
-                          type="button" 
-                          class="btn-micro-reorder" 
-                          [disabled]="mIdx === pl.dieta.length - 1"
-                          (click)="moveMeal(meal.id, 'down', $event)" 
-                          title="Mover refeição para baixo">
-                          <mat-icon>arrow_drop_down</mat-icon>
-                        </button>
+                    </div>
+
+                    <!-- Ghost inputs para nome e horário alinhados (gap 12px) -->
+                    <div class="meal-name-time-group">
+                      <div class="meal-ghost-name-wrap">
+                        <input 
+                          type="text" 
+                          class="meal-ghost-input meal-ghost-name" 
+                          [value]="meal.nome" 
+                          [title]="meal.nome"
+                          aria-label="Nome da refeição"
+                          (change)="meal.nome = $any($event.target).value" />
                       </div>
-                    </div>
 
-                    <!-- Ghost inputs para nome e horário -->
-                    <div class="meal-ghost-name-wrap">
-                      <input 
-                        type="text" 
-                        class="meal-ghost-input meal-ghost-name" 
-                        [value]="meal.nome" 
-                        [title]="meal.nome"
-                        aria-label="Nome da refeição"
-                        (change)="meal.nome = $any($event.target).value" />
-                    </div>
-
-                    <div class="meal-ghost-time-wrap">
-                      <input 
-                        type="time" 
-                        class="meal-ghost-input meal-ghost-time font-tabular" 
-                        [value]="meal.horario || '12:00'" 
-                        aria-label="Horário da refeição"
-                        (change)="meal.horario = $any($event.target).value" />
+                      <div class="meal-ghost-time-wrap" [class.has-duplicate-time]="!!getDuplicateTimeMealName(meal)">
+                        <mat-icon class="meal-clock-icon">schedule</mat-icon>
+                        <input 
+                          type="time" 
+                          class="meal-ghost-input meal-ghost-time font-tabular" 
+                          [value]="meal.horario || '12:00'" 
+                          aria-label="Horário da refeição"
+                          #timeField
+                          (keydown.enter)="onCommitMealTime(meal.id, timeField.value, $event); timeField.blur()"
+                          (blur)="onCommitMealTime(meal.id, timeField.value, $event)" />
+                        @if (getDuplicateTimeMealName(meal); as dupMeal) {
+                          <span 
+                            class="meal-duplicate-time-warning" 
+                            [title]="'Mesmo horário que ' + dupMeal"
+                            [attr.aria-label]="'Mesmo horário que ' + dupMeal">
+                            <mat-icon class="icon-warning-amber">warning</mat-icon>
+                          </span>
+                        }
+                      </div>
                     </div>
                   </div>
 
@@ -2235,6 +2243,29 @@
             </div>
           </form>
         </div>
+
+        <!-- Modal: Manter ordem manual ou ordenar por horário? -->
+        @if (showMealOrderChoiceModal()) {
+          <div class="modal-backdrop-dialog" role="dialog" aria-modal="true" aria-labelledby="mealOrderHeading">
+            <div class="modal-dialog-card">
+              <div class="dialog-icon-wrap icon-wrap-info">
+                <mat-icon class="icon-info">schedule</mat-icon>
+              </div>
+              <h4 id="mealOrderHeading" class="dialog-title">Manter ordem manual ou ordenar por horário?</h4>
+              <p class="dialog-desc">
+                Você reorganizou uma refeição manualmente. Deseja manter sua ordem manual personalizada ou manter as refeições ordenadas cronologicamente por horário?
+              </p>
+              <div class="dialog-actions-row">
+                <button type="button" class="btn-dialog-cancel" (click)="chooseMealOrderMode('manual')">
+                  Manter ordem manual
+                </button>
+                <button type="button" class="btn-dialog-primary" (click)="chooseMealOrderMode('horario')">
+                  Ordenar por horário
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
 

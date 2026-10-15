@@ -8,7 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "./node_modules/.bin/tsc --noEmit -p tsconfig.app.json",
+    "lint": "ng build",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "prettier": {

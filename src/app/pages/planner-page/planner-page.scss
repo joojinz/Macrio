@@ -1129,6 +1129,16 @@ button {
       width: 24px;
       height: 24px;
     }
+
+    &.icon-wrap-info {
+      background-color: rgba(34, 197, 94, 0.12);
+      .icon-info {
+        color: var(--green-400);
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
   }
 
   .dialog-title {
@@ -1176,6 +1186,14 @@ button {
       color: #ffffff;
       font-weight: 600;
       &:hover { background-color: #dc2626; border-color: #dc2626; }
+    }
+
+    .btn-dialog-primary {
+      background-color: var(--green-500);
+      border: 1px solid var(--green-500);
+      color: #09090b;
+      font-weight: 600;
+      &:hover { background-color: var(--green-600); }
     }
   }
 }
@@ -1627,8 +1645,8 @@ button {
 .obs-cell {
   min-width: 0;
   width: 100%;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.4;
   color: #a1a1aa;              /* neutro, sem azul/roxo, sem aparência de link */
   overflow-wrap: break-word;
   word-break: normal;          /* NUNCA break-all nem break-word agressivo */
@@ -1637,11 +1655,14 @@ button {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-height: calc(2 * 1.4em);
   cursor: text;
-  padding: 8px;
+  padding: 6px 8px 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  box-sizing: content-box;
   border-radius: 6px;
   transition: background 150ms ease, color 150ms ease;
-  box-sizing: border-box;
   user-select: text;
   outline: none;
 
@@ -1902,7 +1923,8 @@ button {
               margin-left: 0;
               height: auto;
               max-height: none;
-              padding: 8px 10px 2px;
+              padding: 8px 10px 0;
+              margin-bottom: 0;
               font-size: 13px;
               line-height: 1.4;
               border-radius: 8px;
@@ -2160,7 +2182,8 @@ button {
               border-radius: 8px;
               height: auto;
               max-height: none;
-              padding: 8px 10px 2px;
+              padding: 8px 10px 0;
+              margin-bottom: 0;
               font-size: 13px;
               line-height: 1.4;
 
@@ -4014,6 +4037,18 @@ button {
 
   &:hover {
     border-color: var(--border-hover);
+  }
+
+  &.flash-reordered {
+    background-color: var(--green-soft) !important;
+    border-color: rgba(34, 197, 94, 0.45) !important;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.22) !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  &.is-drag-over {
+    border-color: var(--green-500) !important;
+    background-color: rgba(34, 197, 94, 0.04) !important;
   }
 
   /* Refeição recolhida = 64px com nome, horário, kcal e macros */

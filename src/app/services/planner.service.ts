@@ -56,6 +56,36 @@ export interface DietMeal {
   alimentos: DietFoodItem[];
 }
 
+export function parseTimeToMinutes(timeStr?: string | null): number | null {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const parts = timeStr.trim().split(':');
+  if (parts.length < 2) return null;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+export function sortMealsByTime(meals: DietMeal[]): DietMeal[] {
+  return [...meals]
+    .map((meal, originalIndex) => ({ meal, originalIndex }))
+    .sort((a, b) => {
+      const timeA = parseTimeToMinutes(a.meal.horario);
+      const timeB = parseTimeToMinutes(b.meal.horario);
+
+      if (timeA === null && timeB === null) {
+        return a.originalIndex - b.originalIndex;
+      }
+      if (timeA === null) return 1;
+      if (timeB === null) return -1;
+
+      const diff = timeA - timeB;
+      if (diff !== 0) return diff;
+      return a.originalIndex - b.originalIndex;
+    })
+    .map((item) => item.meal);
+}
+
 export interface UserPlannerData {
   modoPerfil: 'comum' | 'educador_fisico' | 'nutricionista';
   metasCustomizadas: CustomMetabolicGoals;
@@ -181,6 +211,9 @@ export class PlannerService {
         if (res && res.planner) {
           if (res.planner.treinos && res.planner.treinos.length > 0) {
             res.planner.treinos = this.ensureUniqueExerciseIds(res.planner.treinos);
+          }
+          if (res.planner.dieta && res.planner.dieta.length > 0) {
+            res.planner.dieta = sortMealsByTime(res.planner.dieta);
           }
           this.planner.set(res.planner);
           if (res.planner.modoPerfil) {
@@ -491,7 +524,7 @@ export class PlannerService {
       };
       return {
         ...prev,
-        dieta: [...prev.dieta, newMeal],
+        dieta: sortMealsByTime([...prev.dieta, newMeal]),
       };
     });
   }
