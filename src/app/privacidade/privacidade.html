@@ -1,0 +1,34 @@
+<div class="modal-overlay" (mousedown)="close($event)">
+    <div class="modal-content" (mousedown)="$event.stopPropagation()">
+        <button class="close-button" (click)="emitClose()">&times;</button>
+        
+        <section class="privacy-container">
+            <div class="content">
+                <h1>Política de Privacidade</h1>
+                <p class="last-update">Última atualização: 21 de abril de 2026</p>
+
+                <div class="modal-body">
+                    <div class="text-block">
+                        <h2>1. Coleta de Dados</h2>
+                        <p>Para o funcionamento do Macrio, coletamos dados de perfil (peso, altura, idade) e registros alimentares. Esses dados são essenciais para o cálculo de macronutrientes.</p>
+                    </div>
+
+                    <div class="text-block">
+                        <h2>2. Uso das Informações</h2>
+                        <p>Suas informações são utilizadas exclusivamente para personalizar sua experiência e gerar gráficos de evolução. Não compartilhamos seus dados com terceiros.</p>
+                    </div>
+
+                    <div class="text-block">
+                        <h2>3. Segurança</h2>
+                        <p>Adotamos medidas de segurança para proteger suas informações contra acesso não autorizado ou alteração. Sua senha é criptografada em nosso banco de dados.</p>
+                    </div>
+
+                    <div class="text-block">
+                        <h2>4. Seus Direitos</h2>
+                        <p>Você pode, a qualquer momento, exportar ou solicitar a exclusão definitiva de todos os seus dados armazenados em nossa plataforma.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

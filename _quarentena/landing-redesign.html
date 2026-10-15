@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macrio — Landing Page Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0d0d0d;
+  --surface: #1a1a1a;
+  --surface-2: #1e1e1e;
+  --green: #39FF14;
+  --green-dark: #2dcc10;
+  --text: #ffffff;
+  --text-secondary: #aaaaaa;
+  --border: rgba(255,255,255,0.07);
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.section {
+  width: 100%;
+  padding: 96px 5%;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin-bottom: 56px;
+}
+
+/* ═══════════════════════════════════════════════
+   SEÇÃO 1 — COMO FUNCIONA (Timeline)
+   ═══════════════════════════════════════════════ */
+
+.timeline {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.timeline-track {
+  position: absolute;
+  top: 60px;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  background: rgba(255,255,255,0.05);
+}
+
+.timeline-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--green);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timeline-track.is-visible .timeline-line {
+  transform: scaleX(1);
+}
+
+.timeline-step {
+  position: relative;
+  width: 30%;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timeline-step.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.timeline-step:nth-child(2) { transition-delay: 0.15s; }
+.timeline-step:nth-child(3) { transition-delay: 0.3s; }
+
+.step-number {
+  font-family: var(--font-display);
+  font-size: 120px;
+  line-height: 1;
+  color: var(--green);
+  opacity: 0.1;
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.step-dot {
+  width: 40px;
+  height: 40px;
+  background: var(--green);
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-dot svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--bg);
+}
+
+.step-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.step-text {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 260px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════
+   SEÇÃO 2 — PARA QUEM É (Bento Grid)
+   ═══════════════════════════════════════════════ */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: 45% 55%;
+  gap: 20px;
+}
+
+.bento-main {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bento-main.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bento-main h3 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  margin-bottom: 16px;
+}
+
+.bento-main p {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+
+.bento-checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bento-checklist li {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bento-checklist li::before {
+  content: '✓';
+  color: var(--green);
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.bento-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bento-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 28px;
+  flex: 1;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bento-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bento-card:nth-child(1) { transition-delay: 0.1s; }
+.bento-card:nth-child(2) { transition-delay: 0.2s; }
+.bento-card:nth-child(3) { transition-delay: 0.3s; }
+
+.bento-card h4 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.bento-card p {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════
+   SEÇÃO 3 — RECURSOS (Floating Grid)
+   ═══════════════════════════════════════════════ */
+
+.recursos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: relative;
+}
+
+.recursos-grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  pointer-events: none;
+}
+
+.recurso-col {
+  text-align: center;
+  padding: 24px 20px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.recurso-col.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.recurso-col:nth-child(1) { transition-delay: 0s; }
+.recurso-col:nth-child(2) { transition-delay: 0.12s; }
+.recurso-col:nth-child(3) { transition-delay: 0.24s; }
+.recurso-col:nth-child(4) { transition-delay: 0.36s; }
+
+.recurso-col:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--border);
+}
+
+.recurso-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.recurso-line {
+  width: 0;
+  height: 2px;
+  background: var(--green);
+  margin: 0 auto 20px;
+  transition: width 0.4s ease-out 0.3s;
+}
+
+.recurso-col.is-visible .recurso-line {
+  width: 40px;
+}
+
+.recurso-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.recurso-text {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════
+   SEÇÃO 4 — DEPOIMENTOS (Editorial)
+   ═══════════════════════════════════════════════ */
+
+.depoimentos-list {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.depoimento {
+  position: relative;
+  padding: 48px 0;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.depoimento.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.depoimento + .depoimento {
+  border-top: 1px solid var(--border);
+}
+
+.depoimento-quote {
+  position: absolute;
+  top: 20px;
+  left: -30px;
+  font-family: var(--font-display);
+  font-size: 180px;
+  line-height: 1;
+  color: var(--green);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+  transition: opacity 0.5s ease;
+}
+
+.depoimento.is-visible .depoimento-quote {
+  opacity: 0.08;
+}
+
+.depoimento-quote.pulse {
+  animation: quotePulse 4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.depoimento.is-visible .depoimento-quote.pulse {
+  animation-play-state: running;
+}
+
+@keyframes quotePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.depoimento-text {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 24px;
+}
+
+.depoimento-author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.depoimento-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.depoimento-info {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.depoimento-info span {
+  color: var(--green);
+  margin: 0 6px;
+  font-weight: 400;
+}
+
+.depoimento-info em {
+  font-style: normal;
+  font-weight: 300;
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVO
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .section {
+    padding: 64px 6%;
+  }
+
+  .section-title {
+    margin-bottom: 40px;
+  }
+
+  /* Timeline → vertical */
+  .timeline {
+    flex-direction: column;
+    gap: 48px;
+    padding-top: 0;
+  }
+
+  .timeline-track {
+    top: 0;
+    bottom: 0;
+    left: 19px;
+    right: auto;
+    width: 2px;
+    height: 100%;
+  }
+
+  .timeline-line {
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  .timeline-track.is-visible .timeline-line {
+    transform: scaleY(1);
+  }
+
+  .timeline-step {
+    width: 100%;
+    text-align: left;
+    padding-left: 60px;
+  }
+
+  .step-number {
+    font-size: 60px;
+    top: -10px;
+    left: -10px;
+    transform: none;
+  }
+
+  .step-dot {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    margin: 0;
+    width: 40px;
+    height: 40px;
+  }
+
+  .step-text {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  /* Bento → single column */
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-main {
+    min-height: auto;
+  }
+
+  /* Recursos → 2x2 */
+  .recursos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  .recurso-col:nth-child(2)::after {
+    display: none;
+  }
+
+  .recurso-col:nth-child(1),
+  .recurso-col:nth-child(2) {
+    padding-bottom: 32px;
+  }
+
+  .recurso-col:nth-child(3),
+  .recurso-col:nth-child(4) {
+    padding-top: 32px;
+  }
+
+  /* Depoimentos */
+  .depoimento {
+    padding: 36px 0;
+  }
+
+  .depoimento-quote {
+    font-size: 100px;
+    left: -10px;
+    top: 10px;
+  }
+
+  .depoimento-text {
+    font-size: 16px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SEÇÃO 1 — COMO FUNCIONA ═══════ -->
+<section class="section" id="como-funciona">
+  <div class="section-inner">
+    <p class="section-label">PASSO A PASSO</p>
+    <h2 class="section-title">COMO FUNCIONA</h2>
+
+    <div class="timeline">
+      <div class="timeline-track">
+        <div class="timeline-line"></div>
+      </div>
+
+      <div class="timeline-step">
+        <span class="step-number">01</span>
+        <div class="step-dot">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <h3 class="step-title">CRIE SUA CONTA</h3>
+        <p class="step-text">Cadastre-se em segundos e configure seu perfil com seus dados e objetivos pessoais.</p>
+      </div>
+
+      <div class="timeline-step">
+        <span class="step-number">02</span>
+        <div class="step-dot">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        </div>
+        <h3 class="step-title">REGISTRE SUAS REFEIÇÕES</h3>
+        <p class="step-text">Registre o que você come com nossa biblioteca de alimentos ou escaneie códigos de barras.</p>
+      </div>
+
+      <div class="timeline-step">
+        <span class="step-number">03</span>
+        <div class="step-dot">
+          <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+        </div>
+        <h3 class="step-title">ACOMPANHE SEU PROGRESSO</h3>
+        <p class="step-text">Visualize gráficos detalhados e receba insights personalizados para alcançar seus objetivos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SEÇÃO 2 — PARA QUEM É ═══════ -->
+<section class="section" id="para-quem">
+  <div class="section-inner">
+    <p class="section-label">PRA QUEM É</p>
+    <h2 class="section-title">PARA QUEM É O MACRIO</h2>
+
+    <div class="bento-grid">
+      <div class="bento-main">
+        <h3>PARA VOCÊ</h3>
+        <p>Se você busca uma forma prática e inteligente de cuidar da sua alimentação, o Macrio foi feito para você. Não importa se você é iniciante ou atleta — a plataforma se adapta aos seus objetivos.</p>
+        <ul class="bento-checklist">
+          <li>Quer emagrecer com saúde</li>
+          <li>Busca ganhar massa muscular</li>
+          <li>Deseja manter uma alimentação equilibrada</li>
+          <li>Precisa de praticidade no dia a dia</li>
+          <li>Quer entender o que come de verdade</li>
+        </ul>
+      </div>
+
+      <div class="bento-side">
+        <div class="bento-card">
+          <h4>ATLETAS E ATIVOS</h4>
+          <p>Controle preciso de macros e calorias para quem treina com frequência e precisa de performance.</p>
+        </div>
+        <div class="bento-card">
+          <h4>INICIANTES</h4>
+          <p>Interface simples e guias que ajudam quem está começando agora a entender sua alimentação.</p>
+        </div>
+        <div class="bento-card">
+          <h4>PROFISSIONAIS DE SAÚDE</h4>
+          <p>Nutricionistas e coaches usam o Macrio para acompanhar seus pacientes com dados reais.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SEÇÃO 3 — RECURSOS ═══════ -->
+<section class="section" id="recursos">
+  <div class="section-inner">
+    <p class="section-label">RECURSOS</p>
+    <h2 class="section-title">NOSSOS RECURSOS</h2>
+
+    <div class="recursos-grid">
+      <div class="recurso-col">
+        <span class="recurso-icon">📊</span>
+        <div class="recurso-line"></div>
+        <h3 class="recurso-title">CONTROLE DE MACROS</h3>
+        <p class="recurso-text">Acompanhe proteínas, carboidratos e gorduras com precisão em tempo real.</p>
+      </div>
+
+      <div class="recurso-col">
+        <span class="recurso-icon">📷</span>
+        <div class="recurso-line"></div>
+        <h3 class="recurso-title">ESCANEAR CÓDIGOS</h3>
+        <p class="recurso-text">Escaneie o código de barras de qualquer alimento e tenha os dados na hora.</p>
+      </div>
+
+      <div class="recurso-col">
+        <span class="recurso-icon">🎯</span>
+        <div class="recurso-line"></div>
+        <h3 class="recurso-title">METAS PERSONALIZADAS</h3>
+        <p class="recurso-text">Defina objetivos e receba recomendações ajustadas ao seu perfil.</p>
+      </div>
+
+      <div class="recurso-col">
+        <span class="recurso-icon">📈</span>
+        <div class="recurso-line"></div>
+        <h3 class="recurso-title">GRÁFICOS DETALHADOS</h3>
+        <p class="recurso-text">Visualize sua evolução com gráficos claros e relatórios semanais.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SEÇÃO 4 — DEPOIMENTOS ═══════ -->
+<section class="section" id="depoimentos">
+  <div class="section-inner">
+    <p class="section-label">DEPOIMENTOS</p>
+    <h2 class="section-title">QUEM USA, APROVA</h2>
+
+    <div class="depoimentos-list">
+      <div class="depoimento">
+        <div class="depoimento-quote pulse">"</div>
+        <p class="depoimento-text">O Macrio mudou completamente minha relação com a comida. Antes eu achava que dieta era sofrimento, hoje consigo comer bem e ainda ver resultados. A interface é incrivelmente fácil de usar.</p>
+        <div class="depoimento-author">
+          <div class="depoimento-avatar">MR</div>
+          <div class="depoimento-info">
+            Marina Ribeiro <span>•</span> <em>Usuária há 8 meses</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="depoimento">
+        <div class="depoimento-quote pulse">"</div>
+        <p class="depoimento-text">Como nutricionista, recomendo o Macrio para todos os meus pacientes. O controle de macros é preciso e os relatórios me ajudam muito nas consultas. Ferramenta indispensável.</p>
+        <div class="depoimento-author">
+          <div class="depoimento-avatar">CA</div>
+          <div class="depoimento-info">
+            Carlos Almeida <span>•</span> <em>Nutricionista</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="depoimento">
+        <div class="depoimento-quote pulse">"</div>
+        <p class="depoimento-text">Treino há 3 anos e nunca consegui manter uma alimentação consistente. Com o Macrio, finalmente entendi como equilibrar meus macros. Meus resultados na academia melhoraram muito.</p>
+        <div class="depoimento-author">
+          <div class="depoimento-avatar">FS</div>
+          <div class="depoimento-info">
+            Felipe Santos <span>•</span> <em>Atleta amador</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  const targets = document.querySelectorAll(
+    '.timeline-track, .timeline-step, .bento-main, .bento-card, .recurso-col, .depoimento'
+  );
+
+  targets.forEach(el => observer.observe(el));
+})();
+</script>
+
+</body>
+</html>

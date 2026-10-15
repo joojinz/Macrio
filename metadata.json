@@ -1,0 +1,11 @@
+{
+  "name": "Macrio",
+  "description": "Plataforma web de acompanhamento nutricional, cálculo de macros e controle de treinos e hidratação.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

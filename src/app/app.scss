@@ -1,0 +1,57 @@
+.main-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+span {
+  color: #E6E1DA;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+ font-family: 'Inter', 'Montserrat', 'Helvetica Neue', sans-serif;
+  
+}
+
+h1 {
+ display: flex;
+  align-items: center; /* Esse é o segredo para centralizar verticalmente! */
+  justify-content: space-between; /* Empurra o texto para a esquerda e a imagem para a direita */
+  max-width: 1200px; /* Limita a largura para não esticar demais em monitores grandes */
+  margin: 0 auto; /* Centraliza o bloco inteiro na tela */
+  padding: 80px 20px; /* Dá um respiro nas bordas e no topo/fundo */
+  box-sizing: border-box;
+}
+
+.first-img {
+  display: flex;
+  margin: 50px auto;
+  width: 900px;
+}
+
+.button {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.register, .login {
+  background-color: yellow;
+  color: black;
+  width: 100px;
+  height: 50px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+// Modal/standalone scroll lock rules are in styles.scss (global)

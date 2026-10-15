@@ -1,0 +1,52 @@
+<section class="para-quem-section">
+    <a *ngIf="isStandalonePage" routerLink="/" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Voltar
+    </a>
+    <div class="container">
+        <div class="header">
+            <span class="header-tag">PRA QUEM É</span>
+            <h2>PARA QUEM É O MACRIO</h2>
+            <p>Uma plataforma completa para diferentes perfis e objetivos.</p>
+        </div>
+
+        <div class="bento-grid">
+            <div class="bento-main">
+                <h3>PARA VOCÊ</h3>
+                <p>Controle inteligente da sua alimentação, treinos e saúde. Prático para qualquer perfil.</p>
+                <ul class="bento-checklist">
+                    <li>Quer emagrecer com saúde</li>
+                    <li>Busca ganhar massa muscular</li>
+                    <li>Deseja manter uma alimentação equilibrada</li>
+                    <li>Precisa de praticidade no dia a dia</li>
+                    <li>Quer entender o que come de verdade</li>
+                </ul>
+                <button class="btn-primary" (click)="modal.abrirRegister()">Começar Agora</button>
+            </div>
+
+            <div class="bento-side">
+                <div class="bento-card">
+                    <div class="bento-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    </div>
+                    <h4>ATLETAS E ATIVOS</h4>
+                    <p>Controle preciso de macros e calorias para quem treina com frequência e precisa de performance.</p>
+                </div>
+                <div class="bento-card">
+                    <div class="bento-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </div>
+                    <h4>INICIANTES</h4>
+                    <p>Interface simples e guias que ajudam quem está começando agora a entender sua alimentação.</p>
+                </div>
+                <div class="bento-card">
+                    <div class="bento-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+                    </div>
+                    <h4>PROFISSIONAIS DE SAÚDE</h4>
+                    <p>Nutricionistas e coaches usam o Macrio para acompanhar seus pacientes com dados reais.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,331 @@
+<!-- HERO -->
+<section class="hero-section" aria-label="Hero principal">
+  <div class="hero-container">
+    <div class="hero-content" role="region" aria-label="Conteúdo principal">
+      <div class="hero-badge" role="status" aria-label="Status: Mais de 5000 usuários ativos">
+        <span class="badge-dot" aria-hidden="true"></span>
+        <span>+5.000 usuários ativos</span>
+      </div>
+
+      <h1 class="hero-headline">
+        SUA EVOLUÇÃO NUTRICIONAL<br>
+        <span class="accent">EM UM CLIQUE.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Registre alimentação, treinos e água. Acompanhe seu progresso com gráficos claros e tome melhores decisões todos os dias.
+      </p>
+
+      <div class="hero-buttons" role="group" aria-label="Ações principais">
+        <a routerLink="/montador" class="btn-primary btn-planner-glow" aria-label="Montar Treino e Dieta com IA">
+          <span>⚡ Montar Treino & Dieta com IA</span>
+        </a>
+        <button class="btn-primary" (click)="modal.abrirRegister()" aria-label="Criar conta grátis">
+          <span>Criar conta grátis</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-secondary" (click)="scrollToDemo()" aria-label="Ver demonstração">Ver demonstração</button>
+      </div>
+
+      <div class="hero-social-proof" role="group" aria-label="Prova social">
+        <div class="avatares" aria-label="Avatares de usuários">
+          <div class="avatar">J</div>
+          <div class="avatar">M</div>
+          <div class="avatar">A</div>
+          <div class="avatar">R</div>
+          <div class="avatar">+</div>
+        </div>
+        <div class="proof-text">
+          <span class="stars" aria-label="Nota: 4.9 de 5 estrelas" role="img">&#9670;&#9670;&#9670;&#9670;&#9670;</span>
+          <p>4.9/5 de 2.300+ avaliações</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual" role="region" aria-label="Demonstração visual">
+      <div class="hero-img">
+        <img src="/cel-img.png" alt="Interface do aplicativo Macrio" loading="eager">
+      </div>
+      <div class="hero-cards" role="group" aria-label="Cards de demonstração">
+        <div class="float-card" tabindex="0" role="article" aria-label="Evolução de peso">
+          <p class="card-label">Evolução de peso</p>
+          <div class="mini-chart" aria-hidden="true">
+            <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="0,35 20,28 40,30 60,18 80,20 100,10 120,8" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round"/>
+              <polyline points="0,35 20,28 40,30 60,18 80,20 100,10 120,8 120,40 0,40" fill="rgba(28,245,43,0.08)" stroke="none"/>
+            </svg>
+          </div>
+        </div>
+        <div class="float-card" tabindex="0" role="article" aria-label="Composição corporal">
+          <p class="card-label">Composição corporal</p>
+          <div class="composicao">
+            <div class="donut-wrapper" aria-hidden="true">
+              <svg viewBox="0 0 36 36" class="donut">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#1f2937" stroke-width="4"/>
+                <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-accent)" stroke-width="4" stroke-dasharray="56 44" stroke-dashoffset="25" stroke-linecap="round"/>
+                <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-star)" stroke-width="4" stroke-dasharray="20 80" stroke-dashoffset="-31" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="composicao-legend">
+              <p><span class="dot green" aria-hidden="true"></span>Massa magra 62,4%</p>
+              <p><span class="dot yellow" aria-hidden="true"></span>Gordura 21,3%</p>
+            </div>
+          </div>
+        </div>
+        <div class="float-card" tabindex="0" role="article" aria-label="Meta diária de água">
+          <p class="card-label">Meta diária</p>
+          <div class="agua-info">
+            <p class="agua-valor">1,5 <span>/ 2L</span></p>
+            <div class="agua-bar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+              <div class="agua-fill" style="width: 75%"></div>
+            </div>
+            <p class="agua-pct">75% da meta</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS TICKER -->
+<div class="ticker-bar" role="marquee" aria-label="Estatísticas">
+  <div class="ticker-track">
+    <span class="ticker-item">5.000+ Membros</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">50+ Treinos</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">120+ Refeições</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">4.9 de Avaliação</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">98% Satisfação</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">30+ Exercícios Guiados</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">Controle de Água</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">2 Anos de Excelência</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <!-- Duplicated for seamless loop -->
+    <span class="ticker-item">5.000+ Membros</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">50+ Treinos</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">120+ Refeições</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">4.9 de Avaliação</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">98% Satisfação</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">30+ Exercícios Guiados</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">Controle de Água</span>
+    <span class="ticker-sep" aria-hidden="true">&#9670;</span>
+    <span class="ticker-item">2 Anos de Excelência</span>
+  </div>
+</div>
+
+<!-- TRUST BAR -->
+<section class="trust-bar" role="region" aria-label="Benefícios oferecidos">
+  <div class="trust-container">
+    <p class="trust-title">Usado por pessoas que buscam:</p>
+    <div class="trust-items">
+      <div class="trust-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>Perda de peso saudável</span>
+      </div>
+      <div class="trust-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Ganho de massa muscular</span>
+      </div>
+      <div class="trust-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Hábitos sustentáveis</span>
+      </div>
+      <div class="trust-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        <span>Melhor performance</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona" class="how-wrapper">
+  <app-como-funciona></app-como-funciona>
+</section>
+
+<!-- PARA QUEM -->
+<section id="para-quem" class="how-wrapper">
+  <app-para-quem></app-para-quem>
+</section>
+
+<!-- RECURSOS / BENEFICIOS -->
+<section class="benefit-section">
+  <div class="benefit-container">
+    <div class="section-header">
+      <span class="section-eyebrow">NOSSOS RECURSOS</span>
+      <h2 class="section-title">TUDO QUE VOCÊ PRECISA EM UM SÓ LUGAR</h2>
+      <p class="section-subtitle">Registre, acompanhe e evolua com ferramentas completas e intuitivas.</p>
+    </div>
+    <div id="recursos-desktop" class="benefit-grid">
+      <div class="benefit-card">
+        <div class="card-icon"><div style="width:52px;height:52px;border-radius:50%;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></div></div>
+        <h3 class="card-title">ALIMENTAÇÃO</h3>
+        <p class="card-desc">Registre refeições e acompanhe calorias e macros.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="card-icon"><div style="width:52px;height:52px;border-radius:50%;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11"/><path d="M6.5 17.5h11"/><path d="M3 12h18"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div></div>
+        <h3 class="card-title">TREINOS</h3>
+        <p class="card-desc">Monte seus treinos, registre e acompanhe sua evolução.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="card-icon"><div style="width:52px;height:52px;border-radius:50%;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg></div></div>
+        <h3 class="card-title">ÁGUA E HÁBITOS</h3>
+        <p class="card-desc">Acompanhe sua ingestão de água e crie hábitos saudáveis.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="card-icon"><div style="width:52px;height:52px;border-radius:50%;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="22 20 2 20"/></svg></div></div>
+        <h3 class="card-title">GRÁFICOS E RELATÓRIOS</h3>
+        <p class="card-desc">Visualize seu progresso com gráficos claros e objetivos.</p>
+      </div>
+    </div>
+
+    <div id="recursos-mobile" style="display:none; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px;">
+
+      <div style="background:#0a0a0a; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:rgba(34,197,94,0.1); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+        </div>
+        <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#fff;">Alimentação</div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5;">Registre refeições e acompanhe calorias e macros.</div>
+      </div>
+
+      <div style="background:#0a0a0a; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:rgba(34,197,94,0.1); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11"/><path d="M6.5 17.5h11"/><path d="M3 12h18"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        </div>
+        <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#fff;">Treinos</div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5;">Monte seus treinos, registre e acompanhe sua evolução.</div>
+      </div>
+
+      <div style="background:#0a0a0a; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:rgba(34,197,94,0.1); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+        </div>
+        <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#fff;">Água e Hábitos</div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5;">Acompanhe sua ingestão de água e crie hábitos saudáveis.</div>
+      </div>
+
+      <div style="background:#0a0a0a; border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:rgba(34,197,94,0.1); display:flex; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="22 20 2 20"/></svg>
+        </div>
+        <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#fff;">Gráficos e Relatórios</div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5;">Visualize seu progresso com gráficos claros e objetivos.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section class="depoimentos-section">
+  <div class="depoimentos-container">
+    <span class="depoimentos-label">DEPOIMENTOS</span>
+    <h2 class="depoimentos-title">QUEM USA, APROVA</h2>
+
+    <!-- BLOCO 1 — BARRA DE ESTATÍSTICAS -->
+    <div class="stats-bar">
+      <div class="stats-item">
+        <span class="stats-number">4.9★</span>
+        <span class="stats-label">Avaliação média</span>
+      </div>
+      <div class="stats-item">
+        <span class="stats-number">5.000+</span>
+        <span class="stats-label">Usuários ativos</span>
+      </div>
+      <div class="stats-item">
+        <span class="stats-number">98%</span>
+        <span class="stats-label">Satisfação</span>
+      </div>
+      <div class="stats-item">
+        <span class="stats-number">2 anos</span>
+        <span class="stats-label">No mercado</span>
+      </div>
+    </div>
+
+    <!-- BLOCO 2 — FEATURED QUOTE -->
+    <div class="featured-quote">
+      <div class="quote-glow quote-glow-tl"></div>
+      <div class="quote-glow quote-glow-br"></div>
+      <div class="quote-top">
+        <span class="quote-mark">"</span>
+        <div class="quote-stars">
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+          <span class="star"></span>
+        </div>
+      </div>
+      <p class="quote-text">O Macrio mudou completamente minha relação com a comida. Antes eu achava que dieta era <em>sofrimento</em> — hoje consigo comer bem, ver resultados e ainda entender o que estou fazendo.</p>
+      <div class="quote-author">
+        <div class="quote-avatar">MR</div>
+        <div class="quote-author-info">
+          <span class="quote-name">Marina Ribeiro</span>
+          <span class="quote-role">Usuária há 8 meses</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 3 — TICKER INFINITO (fora do container interno) -->
+  <div class="ticker-depoimentos">
+    <div class="ticker-depoimentos-track" id="ticker-depoimentos-track"></div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<app-planos id="planos"></app-planos>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="cta-container">
+    <h2 class="cta-headline">PRONTO PARA TRANSFORMAR<br><span class="accent">SEUS HÁBITOS?</span></h2>
+    <p class="cta-sub">Junte-se a mais de 5.000 pessoas que já melhoraram sua saúde com o Macrio.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary" (click)="modal.abrirRegister()">Começar gratuitamente</button>
+      <button class="btn-secondary" (click)="scrollToDemo()">Ver demonstração</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">MACRIO</span>
+      <p class="footer-desc">Sua evolução nutricional em um clique.</p>
+    </div>
+    <div class="footer-links">
+      <button type="button" class="btn-link" (click)="abrirModal('contato'); $event.preventDefault(); $event.stopPropagation()">Contato</button>
+      <button type="button" class="btn-link" (click)="abrirModal('privacidade'); $event.preventDefault(); $event.stopPropagation()">Privacidade</button>
+      <button type="button" class="btn-link" (click)="abrirModal('termos'); $event.preventDefault(); $event.stopPropagation()">Termos</button>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 Macrio. Todos os direitos reservados.
+  </div>
+</footer>
+
+<!-- MODALS -->
+@if (isContatoAberto) {
+  <app-contato (closeMod)="fecharModal()"></app-contato>
+}
+@if (isPrivacidadeAberto) {
+  <app-privacidade (closeMod)="fecharModal()"></app-privacidade>
+}
+@if (isTermosAberto) {
+  <app-termos (closeMod)="fecharModal()"></app-termos>
+}

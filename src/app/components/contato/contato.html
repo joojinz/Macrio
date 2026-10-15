@@ -1,0 +1,13 @@
+<div class="modal-overlay" (mousedown)="close($event)">
+    <div class="modal-content" (mousedown)="$event.stopPropagation()">
+        <button class="close-button" (click)="emitClose()">&times;</button>
+        
+        <div class="contact-info">
+            <h2>Contato</h2>
+            <p><strong>E-mail:</strong> suporte@macrio.com.br</p>
+            <p><strong>Instagram:</strong> @macrio.app</p>
+            <br>
+            <p style="font-size: 0.9rem; color: #666;">Estamos à disposição para tirar suas dúvidas!</p>
+        </div>
+    </div>
+</div>

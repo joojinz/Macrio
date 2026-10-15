@@ -1,0 +1,53 @@
+<div class="navbar-wrapper">
+  <header class="navbar-container">
+    <div class="logo-area">
+      <a routerLink="/">
+        <img class="img-icon" src="/icon.png" alt="Símbolo Macrio">
+        <img class="text-logo" src="/textlogovetor.png" alt="Macrio Precision Nutrition">
+      </a>
+    </div>
+
+    <div class="nav-links" [class.open]="menuAberto">
+      <a routerLink="/montador" routerLinkActive="active-nav-link" (click)="fecharMenu()" class="nav-link-item">
+        Montar Treino & Dieta
+      </a>
+      <a routerLink="/como-funciona" routerLinkActive="active-nav-link" (click)="fecharMenu()" class="nav-link-item">Como Funciona</a>
+      <a routerLink="/recursos" routerLinkActive="active-nav-link" (click)="fecharMenu()" class="nav-link-item">Recursos</a>
+      <a routerLink="/planos" routerLinkActive="active-nav-link" (click)="fecharMenu()" class="nav-link-item">Planos</a>
+      <a role="button" tabindex="0" (click)="scrollToSection('para-quem')" class="nav-link-item">Para Quem É</a>
+      @if (auth.currentUser(); as user) {
+        <a role="button" tabindex="0" class="mobile-only-link" (click)="fecharMenu(); modal.abrirProfile()">
+          Meu Perfil ({{ user.nome.split(' ')[0] }})
+        </a>
+        <a role="button" tabindex="0" class="mobile-only-link logout" (click)="fecharMenu(); auth.logout()">
+          Sair da Conta
+        </a>
+      }
+    </div>
+
+    <div class="action-area">
+      @if (auth.currentUser(); as user) {
+        <button class="user-pill-btn" (click)="modal.abrirProfile()" title="Abrir perfil profissional e metas">
+          <span class="user-avatar">{{ user.nome.charAt(0).toUpperCase() }}</span>
+          <span class="user-name">{{ user.nome.split(' ')[0] }}</span>
+          @if (user.tipo === 'nutricionista') {
+            <span class="plan-chip pro-chip">NUTRICIONISTA</span>
+          } @else {
+            <span class="plan-chip">{{ user.plano }}</span>
+          }
+        </button>
+        <button class="btn-logout-nav" (click)="auth.logout()" title="Sair da conta" aria-label="Sair">
+          <mat-icon>logout</mat-icon>
+        </button>
+      } @else {
+        <button class="btn-entrar" (click)="modal.abrirLogin()">Entrar</button>
+        <button class="btn-register" (click)="modal.abrirRegister()">Criar Conta</button>
+      }
+      <button class="btn-hamburger" (click)="toggleMenu()" aria-label="Menu">
+        <span [class.open]="menuAberto"></span>
+        <span [class.open]="menuAberto"></span>
+        <span [class.open]="menuAberto"></span>
+      </button>
+    </div>
+  </header>
+</div>

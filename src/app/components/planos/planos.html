@@ -1,0 +1,336 @@
+<!-- HERO -->
+<section class="planos-hero">
+  <div class="planos-hero-inner">
+    <span class="eyebrow">PLANOS</span>
+    <h1>ESCOLHA O PLANO<br><span class="accent">IDEAL PARA VOCÊ</span></h1>
+    <p>Comece gratuitamente. Sem cartão de crédito. Cancele quando quiser.</p>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section class="planos-grid-section">
+  <div class="planos-container">
+    <div class="planos-grid">
+      <!-- GRATUITO -->
+      <div class="plano-card">
+        <div class="plano-top">
+          <h3>GRATUITO</h3>
+          <div class="plano-preco">
+            <span class="valor">R$ 0</span>
+            <span class="periodo">/mês</span>
+          </div>
+          <p class="plano-desc">Perfeito para quem quer começar a cuidar da alimentação sem compromisso.</p>
+        </div>
+        <ul class="plano-features">
+          <li><span class="check">&#10003;</span> Controle básico de calorias</li>
+          <li><span class="check">&#10003;</span> Registro de treinos simples</li>
+          <li><span class="check">&#10003;</span> Acompanhamento de água</li>
+          <li><span class="check">&#10003;</span> Gráficos essenciais de progresso</li>
+          <li><span class="x">&#10007;</span> Análise de macros completa</li>
+          <li><span class="x">&#10007;</span> Insights de IA</li>
+          <li><span class="x">&#10007;</span> Múltiplos perfis</li>
+          <li><span class="x">&#10007;</span> Relatórios avançados</li>
+          <li><span class="x">&#10007;</span> Suporte prioritário</li>
+        </ul>
+        <button class="btn-outline" (click)="modal.abrirRegister()">Começar gratuitamente</button>
+      </div>
+
+      <!-- PREMIUM MENSAL -->
+      <div class="plano-card destaque">
+        <div class="plano-badge">POPULAR</div>
+        <div class="plano-top">
+          <h3>PREMIUM MENSAL</h3>
+          <div class="plano-preco">
+            <span class="valor">R$ 19,90</span>
+            <span class="periodo">/mês</span>
+          </div>
+          <p class="plano-desc">Para quem quer resultados reais com ferramentas completas e sem limitações.</p>
+        </div>
+        <ul class="plano-features">
+          <li><span class="check">&#10003;</span> Tudo do plano Gratuito</li>
+          <li><span class="check">&#10003;</span> Análise de macros completa</li>
+          <li><span class="check">&#10003;</span> Treinos ilimitados e personalizados</li>
+          <li><span class="check">&#10003;</span> Insights de IA sobre seus padrões</li>
+          <li><span class="check">&#10003;</span> Experiência sem anúncios</li>
+          <li><span class="check">&#10003;</span> Múltiplos perfis (família)</li>
+          <li><span class="check">&#10003;</span> Gráficos avançados e comparativos</li>
+          <li><span class="x">&#10007;</span> Relatórios anuais detalhados</li>
+          <li><span class="x">&#10007;</span> Acesso antecipado a novidades</li>
+        </ul>
+        <button class="btn-primary" (click)="modal.abrirRegister()">Assinar Mensal</button>
+      </div>
+
+      <!-- PREMIUM ANUAL -->
+      <div class="plano-card">
+        <span class="plano-badge melhor-valor">MELHOR VALOR</span>
+        <div class="plano-top">
+          <h3>PREMIUM ANUAL</h3>
+          <div class="plano-preco">
+            <span class="valor">R$ 9,90</span>
+            <span class="periodo">/mês</span>
+          </div>
+          <p class="plano-sub">ou R$ 118,80 à vista</p>
+          <p class="plano-desc">A melhor escolha para quem está comprometido com a transformação a longo prazo.</p>
+        </div>
+        <ul class="plano-features">
+          <li><span class="check">&#10003;</span> Tudo do Premium Mensal</li>
+          <li><span class="check">&#10003;</span> Economia de 50% no valor mensal</li>
+          <li><span class="check">&#10003;</span> Relatórios anuais detalhados</li>
+          <li><span class="check">&#10003;</span> Suporte prioritário 24/7</li>
+          <li><span class="check">&#10003;</span> Acesso antecipado a novidades</li>
+          <li><span class="check">&#10003;</span> Sem renovação surpresa</li>
+          <li><span class="check">&#10003;</span> Exportação de dados em PDF</li>
+          <li><span class="check">&#10003;</span> Consultoria nutricional básica</li>
+          <li><span class="check">&#10003;</span> Badge de membro fundador</li>
+        </ul>
+        <button class="btn-primary" (click)="modal.abrirRegister()">Assinar Anual</button>
+      </div>
+    </div>
+
+    <!-- MOBILE LAYOUT -->
+    <div class="planos-mobile">
+      <div class="seg-control">
+        <button class="seg-btn" (click)="selectPlano(0)">Grátis</button>
+        <button class="seg-btn active" (click)="selectPlano(1)">Mensal</button>
+        <button class="seg-btn" (click)="selectPlano(2)">Anual</button>
+      </div>
+
+      <!-- CARD 0 — GRATUITO -->
+      <div class="m-card">
+        <div class="m-preco">
+          <span class="m-valor">R$ 0</span><span class="m-periodo">/mês</span>
+        </div>
+        <p class="m-desc">Perfeito para quem quer começar a cuidar da alimentação sem compromisso.</p>
+        <div class="m-divider"></div>
+        <ul class="m-features">
+          <li><span class="m-icon m-check">✓</span> Controle básico de calorias</li>
+          <li><span class="m-icon m-check">✓</span> Registro de treinos simples</li>
+          <li><span class="m-icon m-check">✓</span> Acompanhamento de água</li>
+          <li><span class="m-icon m-check">✓</span> Gráficos essenciais de progresso</li>
+          <li><span class="m-icon m-x">✕</span> Análise de macros completa</li>
+          <li><span class="m-icon m-x">✕</span> Insights de IA</li>
+          <li><span class="m-icon m-x">✕</span> Múltiplos perfis</li>
+          <li><span class="m-icon m-x">✕</span> Suporte prioritário</li>
+        </ul>
+        <button class="m-btn m-btn-outline" (click)="modal.abrirRegister()">Começar gratuitamente</button>
+      </div>
+
+      <!-- CARD 1 — PREMIUM MENSAL -->
+      <div class="m-card m-card-active">
+        <span class="m-badge m-badge-popular">⚡ Popular</span>
+        <div class="m-preco">
+          <span class="m-valor m-valor-accent">R$ 19,90</span><span class="m-periodo">/mês</span>
+        </div>
+        <p class="m-desc">Para quem quer resultados reais com ferramentas completas e sem limitações.</p>
+        <div class="m-divider"></div>
+        <ul class="m-features">
+          <li><span class="m-icon m-check">✓</span> Tudo do plano Gratuito</li>
+          <li><span class="m-icon m-check">✓</span> Análise de macros completa</li>
+          <li><span class="m-icon m-check">✓</span> Treinos ilimitados e personalizados</li>
+          <li><span class="m-icon m-check">✓</span> Insights de IA sobre seus padrões</li>
+          <li><span class="m-icon m-check">✓</span> Experiência sem anúncios</li>
+          <li><span class="m-icon m-check">✓</span> Múltiplos perfis (família)</li>
+          <li><span class="m-icon m-check">✓</span> Gráficos avançados e comparativos</li>
+          <li><span class="m-icon m-x">✕</span> Relatórios anuais detalhados</li>
+          <li><span class="m-icon m-x">✕</span> Suporte prioritário 24/7</li>
+        </ul>
+        <button class="m-btn m-btn-primary" (click)="modal.abrirRegister()">Assinar mensal</button>
+      </div>
+
+      <!-- CARD 2 — PREMIUM ANUAL -->
+      <div class="m-card">
+        <span class="m-badge m-badge-anual">🏆 Melhor valor</span>
+        <div class="m-preco">
+          <span class="m-valor">R$ 9,90</span><span class="m-periodo">/mês</span>
+        </div>
+        <p class="m-sub">ou R$ 118,80 à vista</p>
+        <div class="m-economia">💰 Você economiza R$ 119,00 por ano</div>
+        <div class="m-divider"></div>
+        <ul class="m-features">
+          <li><span class="m-icon m-check">✓</span> Tudo do Premium Mensal</li>
+          <li><span class="m-icon m-check">✓</span> Economia de 50% no valor mensal</li>
+          <li><span class="m-icon m-check">✓</span> Relatórios anuais detalhados</li>
+          <li><span class="m-icon m-check">✓</span> Suporte prioritário 24/7</li>
+          <li><span class="m-icon m-check">✓</span> Acesso antecipado a novidades</li>
+          <li><span class="m-icon m-check">✓</span> Sem renovação surpresa</li>
+          <li><span class="m-icon m-check">✓</span> Exportação de dados em PDF</li>
+          <li><span class="m-icon m-check">✓</span> Consultoria nutricional básica</li>
+          <li><span class="m-icon m-check">✓</span> Badge de membro fundador</li>
+        </ul>
+        <button class="m-btn m-btn-primary" (click)="modal.abrirRegister()">Assinar anual</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARATIVO -->
+<section class="comparativo-section">
+  <div class="comparativo-container">
+    <div class="section-header">
+      <span class="section-eyebrow">COMPARATIVO</span>
+      <h2 class="section-title">VEJA O QUE CADA PLANO INCLUI</h2>
+    </div>
+    <div class="comparativo-table">
+      <div class="table-header">
+        <div class="feature-col">Recurso</div>
+        <div class="plan-col">Gratuito</div>
+        <div class="plan-col featured">Mensal</div>
+        <div class="plan-col">Anual</div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Registro de refeições</div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Controle de água</div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Treinos básicos</div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Gráficos de progresso</div>
+        <div class="plan-col">Básicos</div>
+        <div class="plan-col featured">Avançados</div>
+        <div class="plan-col">Avançados</div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Análise de macros</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Insights de IA</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Múltiplos perfis</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Sem anúncios</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="check">&#10003;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Relatórios anuais</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="x">&#10007;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Suporte prioritário</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="x">&#10007;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+      <div class="table-row">
+        <div class="feature-col">Exportação em PDF</div>
+        <div class="plan-col"><span class="x">&#10007;</span></div>
+        <div class="plan-col featured"><span class="x">&#10007;</span></div>
+        <div class="plan-col"><span class="check">&#10003;</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOBILE COMPARATIVO -->
+<div class="cmp-mobile">
+  <div class="cmp-inner">
+    <span class="cmp-label">COMPARATIVO</span>
+    <h2 class="cmp-title">VEJA O QUE CADA PLANO INCLUI</h2>
+    <div class="cmp-seg">
+      <button class="cmp-seg-btn" (click)="cmpSelect(0)">vs Gratuito</button>
+      <button class="cmp-seg-btn active" (click)="cmpSelect(1)">vs Mensal</button>
+      <button class="cmp-seg-btn" (click)="cmpSelect(2)">vs Anual</button>
+    </div>
+    <div class="cmp-hint">
+      <span class="cmp-hint-text" id="cmp-hint-text">Comparando Mensal</span>
+      <div class="cmp-dots">
+        <span class="cmp-dot" id="cmp-dot-0"></span>
+        <span class="cmp-dot active" id="cmp-dot-1"></span>
+        <span class="cmp-dot" id="cmp-dot-2"></span>
+      </div>
+    </div>
+    <div class="cmp-table" id="cmp-table"></div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="faq-container">
+    <div class="section-header">
+      <span class="section-eyebrow">PERGUNTAS FREQUENTES</span>
+      <h2 class="section-title">TIRE SUAS DÚVIDAS</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item" [class.open]="faqAberto === 0">
+        <button class="faq-pergunta" (click)="toggleFaq(0)">
+          <span>Preciso fornecer cartão de crédito para o plano gratuito?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Não. O plano gratuito é completamente grátis e não exige nenhuma informação de pagamento. Você só precisa criar uma conta com seu e-mail.</p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="faqAberto === 1">
+        <button class="faq-pergunta" (click)="toggleFaq(1)">
+          <span>Posso cancelar a qualquer momento?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Sim. Você pode cancelar sua assinatura a qualquer momento, sem taxas ou burocracias. O acesso continua até o fim do período já pago.</p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="faqAberto === 2">
+        <button class="faq-pergunta" (click)="toggleFaq(2)">
+          <span>O que acontece quando meu plano Premium expira?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Seus dados são preservados. Você volta automaticamente para o plano Gratuito, mantendo todo o histórico de registros e progresso.</p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="faqAberto === 3">
+        <button class="faq-pergunta" (click)="toggleFaq(3)">
+          <span>Posso mudar de plano Mensal para Anual?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Sim! Você pode fazer upgrade a qualquer momento. O valor já pago do plano Mensal é descontado proporcionalmente no Anual.</p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="faqAberto === 4">
+        <button class="faq-pergunta" (click)="toggleFaq(4)">
+          <span>Quais formas de pagamento são aceitas?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Aceitamos cartões de crédito e débito (Visa, Mastercard, Elo), Pix e boleto bancário. O pagamento é processado de forma segura.</p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="faqAberto === 5">
+        <button class="faq-pergunta" (click)="toggleFaq(5)">
+          <span>O plano gratuito tem limite de tempo?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-resposta">
+          <p>Não. O plano gratuito é vitalício. Use o tempo que quiser, sem pressão para fazer upgrade. Só mude quando sentir que precisa de mais recursos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

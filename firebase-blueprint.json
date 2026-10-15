@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Conta do usuário do Macrio com perfil de nutrição e métricas corporais",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único do usuário" },
+        "nome": { "type": "string", "description": "Nome completo", "maxLength": 120 },
+        "email": { "type": "string", "description": "Endereço de e-mail único", "maxLength": 180 },
+        "tipo": { "type": "string", "enum": ["pessoal", "nutricionista"] },
+        "plano": { "type": "string", "enum": ["gratuito", "mensal", "anual"] },
+        "aceitaTermos": { "type": "boolean" },
+        "aceitaPrivacidade": { "type": "boolean" },
+        "perfil": {
+          "type": "object",
+          "description": "Dados antropométricos, metas e cálculos energéticos Mifflin-St Jeor",
+          "properties": {
+            "metaAguaMl": { "type": "integer" },
+            "metaCalorias": { "type": "integer" },
+            "pesoKg": { "type": "number" },
+            "alturaCm": { "type": "integer" },
+            "idade": { "type": "integer" },
+            "sexo": { "type": "string", "enum": ["masculino", "feminino"] },
+            "nivelAtividade": { "type": "string", "enum": ["sedentario", "leve", "moderado", "intenso", "muito_intenso"] },
+            "objetivo": { "type": "string", "enum": ["perder_peso", "manter", "ganhar_massa"] },
+            "tmb": { "type": "number" },
+            "gastoEnergeticoTotal": { "type": "number" },
+            "caloriasRecomendadas": { "type": "number" },
+            "metaAguaRecomendadaMl": { "type": "number" }
+          }
+        },
+        "planner": {
+          "type": "object",
+          "description": "Dados do planejador de treino, dieta e metas customizadas"
+        },
+        "criadoEm": { "type": "string", "format": "date-time" },
+        "atualizadoEm": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "nome", "email", "tipo", "plano", "aceitaTermos", "aceitaPrivacidade"]
+    },
+    "Patient": {
+      "title": "Patient",
+      "description": "Paciente cadastrado por nutricionista",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nutritionistId": { "type": "string" },
+        "nome": { "type": "string" },
+        "idade": { "type": "integer" },
+        "pesoKg": { "type": "number" },
+        "alturaCm": { "type": "integer" },
+        "sexo": { "type": "string", "enum": ["masculino", "feminino"] },
+        "objetivo": { "type": "string", "enum": ["perder_peso", "manter", "ganhar_massa"] },
+        "tmb": { "type": "number" },
+        "caloriasRecomendadas": { "type": "number" },
+        "criadoEm": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "nutritionistId", "nome", "idade", "pesoKg", "alturaCm", "sexo", "objetivo"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserAccount",
+      "description": "Documento da conta e perfil antropométrico do usuário"
+    },
+    "/patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Documento de paciente vinculado a um nutricionista"
+    }
+  }
+}

@@ -1,0 +1,280 @@
+<div class="modal-overlay" (mousedown)="backgroundClose($event)" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <button class="close-btn" (click)="close()" aria-label="Fechar">&times;</button>
+
+    @if (auth.currentUser(); as user) {
+      <div class="profile-header">
+        <div class="avatar-circle">
+          {{ user.nome.charAt(0).toUpperCase() }}
+        </div>
+        <div class="user-meta">
+          <div class="user-name-row">
+            <h2 id="profile-title">{{ user.nome }}</h2>
+            @if (form.tipo === 'nutricionista') {
+              <span class="pro-tag">PRO</span>
+            }
+          </div>
+          <span class="user-email">{{ user.email }}</span>
+          <div class="badges-row">
+            <span class="badge-plan">{{ user.plano }}</span>
+            <span class="badge-type" [class.pro]="form.tipo === 'nutricionista'">
+              {{ form.tipo === 'nutricionista' ? 'Nutricionista (Profissional)' : 'Uso Pessoal' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Mode Switcher -->
+      <div class="account-switcher-box">
+        <span class="switcher-label">Modalidade da Conta:</span>
+        <div class="switcher-buttons">
+          <button type="button" class="sw-btn" [class.active]="form.tipo === 'nutricionista'" (click)="alternarTipo('nutricionista')">
+            &#9733; Nutricionista (Profissional)
+          </button>
+          <button type="button" class="sw-btn" [class.active]="form.tipo === 'pessoal'" (click)="alternarTipo('pessoal')">
+            Uso Pessoal
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="profile-tabs">
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'parametros'" (click)="activeTab = 'parametros'">
+          Meus Parâmetros & Metas
+        </button>
+        @if (form.tipo === 'nutricionista') {
+          <button type="button" class="tab-btn" [class.active]="activeTab === 'pacientes'" (click)="activeTab = 'pacientes'">
+            Meus Pacientes ({{ patients.length }})
+          </button>
+        }
+      </div>
+
+      <!-- Direct Link to Montador de Treino & Dieta -->
+      <div class="planner-launcher-banner">
+        <a routerLink="/montador" (click)="close()" class="btn-launcher-link">
+          <span>⚡ Acessar Montador de Treino & Dieta com Copiloto IA (Valores Customizados)</span>
+          <span class="arr-icon">&rarr;</span>
+        </a>
+      </div>
+
+      @if (mensagemSucesso) {
+        <div class="feedback-success">
+          &#10003; {{ mensagemSucesso }}
+        </div>
+      }
+
+      @if (erro) {
+        <div class="feedback-error">
+          &#10007; {{ erro }}
+        </div>
+      }
+
+      <!-- TAB 1: MEUS PARÂMETROS -->
+      @if (activeTab === 'parametros') {
+        <!-- Live Metabolic Calculation Summary -->
+        <div class="metabolic-summary-card">
+          <div class="card-title-row">
+            <h3>SEU MOTOR METABÓLICO</h3>
+            <span class="formula-tag">Mifflin-St Jeor</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-block">
+              <span class="m-title">TMB Basal</span>
+              <span class="m-number">{{ liveTmb }} <small>kcal</small></span>
+              <span class="m-desc">Queima em repouso</span>
+            </div>
+            <div class="metric-block">
+              <span class="m-title">Gasto Total (TDEE)</span>
+              <span class="m-number">{{ liveGastoTotal }} <small>kcal</small></span>
+              <span class="m-desc">Com rotina ativa</span>
+            </div>
+            <div class="metric-block highlight">
+              <span class="m-title">Meta Calórica</span>
+              <span class="m-number">{{ liveCalorias }} <small>kcal</small></span>
+              <span class="m-desc">Ajuste p/ objetivo</span>
+            </div>
+            <div class="metric-block">
+              <span class="m-title">Meta de Água</span>
+              <span class="m-number">{{ liveAguaRecomendada }} <small>ml</small></span>
+              <span class="m-desc">35ml por kg de peso</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bio-Metrics Editing Form -->
+        <form class="profile-form" (ngSubmit)="salvar()">
+          <h4 class="section-title">PARÂMETROS CORPORAIS</h4>
+
+          <div class="grid-2col">
+            <div class="input-group">
+              <label for="p-peso">Peso atual (kg)</label>
+              <input type="number" id="p-peso" [(ngModel)]="form.pesoKg" name="pesoKg" min="20" max="400" step="0.5">
+            </div>
+            <div class="input-group">
+              <label for="p-altura">Altura (cm)</label>
+              <input type="number" id="p-altura" [(ngModel)]="form.alturaCm" name="alturaCm" min="80" max="250">
+            </div>
+          </div>
+
+          <div class="grid-2col">
+            <div class="input-group">
+              <label for="p-idade">Idade (anos)</label>
+              <input type="number" id="p-idade" [(ngModel)]="form.idade" name="idade" min="10" max="120">
+            </div>
+            <div class="input-group">
+              <label for="p-sexo">Sexo biológico</label>
+              <select id="p-sexo" [(ngModel)]="form.sexo" name="sexo" class="custom-select">
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="p-atividade">Nível de atividade física</label>
+            <select id="p-atividade" [(ngModel)]="form.nivelAtividade" name="nivelAtividade" class="custom-select">
+              <option value="sedentario">Sedentário (pouco ou nenhum exercício)</option>
+              <option value="leve">Leve (exercício 1 a 3 dias/semana)</option>
+              <option value="moderado">Moderado (exercício 3 a 5 dias/semana)</option>
+              <option value="intenso">Intenso (exercício pesado 6 a 7 dias/semana)</option>
+              <option value="muito_intenso">Muito intenso (atleta de alto rendimento)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="p-objetivo">Objetivo nutricional</label>
+            <select id="p-objetivo" [(ngModel)]="form.objetivo" name="objetivo" class="custom-select">
+              <option value="perder_peso">Perder peso (-400 kcal déficit)</option>
+              <option value="manter">Manter peso (manutenção energética)</option>
+              <option value="ganhar_massa">Ganhar massa (+350 kcal superávit)</option>
+            </select>
+          </div>
+
+          <div class="action-buttons">
+            <button type="submit" class="btn-save" [disabled]="isSaving">
+              {{ isSaving ? 'Salvando...' : 'Salvar Alterações' }}
+            </button>
+            <button type="button" class="btn-logout" (click)="logout()">
+              Sair da Conta
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- TAB 2: GESTÃO DE PACIENTES -->
+      @if (activeTab === 'pacientes' && form.tipo === 'nutricionista') {
+        <div class="patients-section">
+          <!-- Add Patient Form -->
+          <div class="add-patient-box">
+            <h4 class="box-title">NOVO PACIENTE</h4>
+            <form (ngSubmit)="adicionarPaciente()" class="patient-form">
+              <div class="input-group">
+                <label for="new-pat-name">Nome do paciente</label>
+                <input type="text" id="new-pat-name" [(ngModel)]="novoPaciente.nome" name="nome" placeholder="Ex: Lucas Ferreira" required>
+              </div>
+
+              <div class="grid-3col">
+                <div class="input-group">
+                  <label for="new-pat-peso">Peso (kg)</label>
+                  <input type="number" id="new-pat-peso" [(ngModel)]="novoPaciente.pesoKg" name="pesoKg" min="20" max="300" step="0.5">
+                </div>
+                <div class="input-group">
+                  <label for="new-pat-altura">Altura (cm)</label>
+                  <input type="number" id="new-pat-altura" [(ngModel)]="novoPaciente.alturaCm" name="alturaCm" min="80" max="230">
+                </div>
+                <div class="input-group">
+                  <label for="new-pat-idade">Idade</label>
+                  <input type="number" id="new-pat-idade" [(ngModel)]="novoPaciente.idade" name="idade" min="10" max="110">
+                </div>
+              </div>
+
+              <div class="grid-2col">
+                <div class="input-group">
+                  <label for="new-pat-sexo">Sexo biológico</label>
+                  <select id="new-pat-sexo" [(ngModel)]="novoPaciente.sexo" name="sexo" class="custom-select">
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="new-pat-objetivo">Objetivo</label>
+                  <select id="new-pat-objetivo" [(ngModel)]="novoPaciente.objetivo" name="objetivo" class="custom-select">
+                    <option value="perder_peso">Perder peso (-400 kcal)</option>
+                    <option value="manter">Manter peso</option>
+                    <option value="ganhar_massa">Ganhar massa (+350 kcal)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Live Patient Calculations Preview -->
+              @if (liveNovoPacienteTmb > 0) {
+                <div class="patient-calc-preview">
+                  <span>TMB Calculada: <strong>{{ liveNovoPacienteTmb }} kcal</strong></span>
+                  <span>Meta Calórica: <strong>{{ liveNovoPacienteCalorias }} kcal</strong></span>
+                </div>
+              }
+
+              <button type="submit" class="btn-add-patient" [disabled]="!novoPaciente.nome || isSavingPatient">
+                {{ isSavingPatient ? 'Cadastrando...' : '+ Cadastrar Paciente' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Patients List -->
+          <div class="patients-list">
+            <h4 class="section-title">SEUS PACIENTES ({{ patients.length }})</h4>
+
+            @if (isLoadingPatients) {
+              <p class="loading-text">Carregando lista de pacientes...</p>
+            } @else if (patients.length === 0) {
+              <div class="empty-patients">
+                <p>Nenhum paciente cadastrado ainda. Use o formulário acima para adicionar seu primeiro aluno!</p>
+              </div>
+            } @else {
+              <div class="patient-cards-grid">
+                @for (pat of patients; track pat.id) {
+                  <div class="patient-card">
+                    <div class="pat-header">
+                      <div class="pat-avatar">{{ pat.nome.charAt(0).toUpperCase() }}</div>
+                      <div class="pat-info">
+                        <h5>{{ pat.nome }}</h5>
+                        <span class="pat-details">{{ pat.idade }} anos · {{ pat.pesoKg }}kg · {{ pat.alturaCm }}cm</span>
+                      </div>
+                      <button type="button" class="btn-del-patient" (click)="removerPaciente(pat.id)" title="Remover paciente">
+                        &times;
+                      </button>
+                    </div>
+
+                    <div class="pat-metrics-row">
+                      <div class="p-metric">
+                        <span class="p-label">TMB Basal</span>
+                        <span class="p-value">{{ pat.tmb }} <small>kcal</small></span>
+                      </div>
+                      <div class="p-metric highlight">
+                        <span class="p-label">Meta Diária</span>
+                        <span class="p-value">{{ pat.caloriasRecomendadas }} <small>kcal</small></span>
+                      </div>
+                      <div class="p-metric">
+                        <span class="p-label">Objetivo</span>
+                        <span class="p-chip">{{ pat.objetivo === 'perder_peso' ? 'Perder peso' : (pat.objetivo === 'ganhar_massa' ? 'Ganho de massa' : 'Manutenção') }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    } @else {
+      <div class="empty-state">
+        <p>Você precisa estar conectado para ver seu perfil profissional.</p>
+        <button type="button" class="btn-save" (click)="close(); modal.abrirLogin()">Fazer Login</button>
+      </div>
+    }
+
+  </div>
+</div>

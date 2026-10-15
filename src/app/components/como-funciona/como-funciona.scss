@@ -1,0 +1,269 @@
+// COMO FUNCIONA — Timeline Layout
+// Design: Bebas Neue display, #1cf52b accent, timeline with decorative numbers
+
+:host { display: block; }
+
+@mixin section-pad {
+  padding: var(--space-3xl) 5%;
+  @media (max-width: 768px) { padding: var(--space-2xl) 6%; }
+}
+
+@mixin container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.how-section {
+  @include section-pad;
+  background: var(--color-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  @include container;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  &:hover { color: var(--color-accent); border-color: var(--color-accent); }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 0;
+
+  .header-tag {
+    display: block;
+    font-family: var(--font-display-alt);
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    color: var(--color-accent);
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-family: var(--font-display-alt);
+    font-size: clamp(32px, 5vw, 52px);
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+  }
+
+  p {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+}
+
+// ── Timeline ──
+
+.timeline {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: 60px;
+  margin-bottom: var(--space-xl);
+}
+
+.timeline-track {
+  position: absolute;
+  top: 80px;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.timeline-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to right, var(--color-accent), rgba(28,245,43,0.2));
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.timeline-track.is-visible .timeline-line {
+  transform: scaleX(1);
+}
+
+.timeline-step {
+  position: relative;
+  width: 30%;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &:nth-child(3) { transition-delay: 0.15s; }
+  &:nth-child(4) { transition-delay: 0.3s; }
+}
+
+.step-number {
+  font-family: var(--font-display-alt);
+  font-size: 160px;
+  line-height: 1;
+  color: rgba(28,245,43,0.12);
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.step-dot {
+  width: 52px;
+  height: 52px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--color-bg);
+  }
+}
+
+.step-title {
+  font-family: var(--font-display-alt);
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  position: relative;
+  z-index: 1;
+  text-transform: uppercase;
+}
+
+.step-text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  max-width: 260px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.como-funciona-cta {
+  text-align: center;
+  margin-top: var(--space-xl);
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 14px 32px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    color: var(--color-dark);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+    &:hover { opacity: 0.9; }
+    &:active { transform: scale(0.98); }
+  }
+}
+
+// ── Responsive ──
+
+@media (max-width: 768px) {
+  .timeline {
+    flex-direction: column;
+    gap: 48px;
+    padding-top: 0;
+  }
+
+  .timeline-track {
+    top: 0;
+    bottom: 0;
+    left: 19px;
+    right: auto;
+    width: 2px;
+    height: 100%;
+  }
+
+  .timeline-line {
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  .timeline-track.is-visible .timeline-line {
+    transform: scaleY(1);
+  }
+
+  .timeline-step {
+    width: 100%;
+    text-align: left;
+    padding-left: 60px;
+  }
+
+  .step-number {
+    font-size: 60px;
+    top: -10px;
+    left: -10px;
+    transform: none;
+  }
+
+  .step-dot {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    margin: 0;
+    width: 40px;
+    height: 40px;
+  }
+
+  .step-text {
+    max-width: 100%;
+    margin: 0;
+  }
+}

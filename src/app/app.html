@@ -1,0 +1,13 @@
+<router-outlet></router-outlet>
+
+@if (modal.registerAberto()) {
+  <app-register (closeMod)="modal.fecharRegister()"></app-register>
+}
+
+@if (modal.loginAberto()) {
+  <app-login (closeMod)="modal.fecharLogin()"></app-login>
+}
+
+@if (modal.profileAberto()) {
+  <app-profile-modal (closeMod)="modal.fecharProfile()"></app-profile-modal>
+}

@@ -1,0 +1,2802 @@
+<app-navbar></app-navbar>
+
+<div class="planner-layout">
+  <!-- Minimalist Clean Header -->
+  <header class="planner-header">
+    <div class="header-main">
+      <div class="header-left">
+        <a routerLink="/" class="back-link">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Início</span>
+        </a>
+        <div class="title-wrap">
+          <h1 class="page-title">Montador de Treino & Dieta</h1>
+          <p class="page-subtitle">Planilha interativa para personalização total de treinos, metas e planos alimentares</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Menu [⋯ Mais] Dropdown (Compartilhar, Imprimir) - Idêntico em todas as abas -->
+        <div class="dropdown-wrapper header-more-wrapper" (keydown)="onDropdownKeydown($event)">
+          <button 
+            type="button" 
+            class="btn-secondary-action btn-header-more"
+            (click)="toggleDropdown('header-unified-more')"
+            [class.active]="activeDropdown() === 'header-unified-more'"
+            title="Mais opções de exportação, compartilhamento e impressão"
+            aria-label="Mais opções"
+            aria-haspopup="true"
+            [attr.aria-expanded]="activeDropdown() === 'header-unified-more'">
+            <mat-icon>more_horiz</mat-icon>
+            <span>Mais</span>
+            <mat-icon class="caret-icon">expand_more</mat-icon>
+          </button>
+          @if (activeDropdown() === 'header-unified-more') {
+            <div class="dropdown-menu" role="menu">
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasWorkoutPlan()"
+                (click)="sharePlan('treino'); closeDropdowns()">
+                <mat-icon>share</mat-icon>
+                <span>Compartilhar Treino</span>
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasDietPlan()"
+                (click)="sharePlan('alimentacao'); closeDropdowns()">
+                <mat-icon>share</mat-icon>
+                <span>Compartilhar Alimentação</span>
+              </button>
+              <div class="dropdown-menu-divider"></div>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasWorkoutPlan()"
+                (click)="printPlan('treino'); closeDropdowns()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir Treino</span>
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasDietPlan()"
+                (click)="printPlan('alimentacao'); closeDropdowns()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir Alimentação</span>
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                (click)="printPlan('all'); closeDropdowns()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir Ficha Completa</span>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Botão Primário Verde Sólido: Salvar Alterações -->
+        <button 
+          type="button"
+          class="btn-primary-action btn-save-main" 
+          [disabled]="plannerService.saving()"
+          (click)="applyCustomGoals(); plannerService.savePlanner().subscribe()">
+          @if (plannerService.saving()) {
+            <mat-icon class="spin-icon">sync</mat-icon>
+            <span>Salvando...</span>
+          } @else {
+            <mat-icon>save</mat-icon>
+            <span>Salvar Alterações</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Feedback Message if saved -->
+    @if (plannerService.saveSuccessMessage(); as msg) {
+      <div class="toast-success" role="status" aria-live="polite">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <!-- Toast Feedback de Exportação (Sucesso) -->
+    @if (copyFeedback(); as fb) {
+      <div class="toast-success" role="status" aria-live="polite">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ fb }}</span>
+      </div>
+    }
+
+    <!-- Toast Feedback de Exportação (Erro com Tentar Novamente) -->
+    @if (exportError(); as err) {
+      <div class="toast-error" role="alert" aria-live="assertive">
+        <div class="toast-error-left">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ err.message }}</span>
+        </div>
+        <div class="toast-error-actions">
+          <button
+            type="button"
+            class="btn-toast-retry"
+            title="Tentar gerar o PDF novamente"
+            aria-label="Tentar gerar o PDF novamente"
+            (click)="retryExport(err.type)">
+            <mat-icon>refresh</mat-icon>
+            <span>Tentar novamente</span>
+          </button>
+          <button
+            type="button"
+            class="btn-toast-close"
+            title="Fechar notificação"
+            aria-label="Fechar notificação"
+            (click)="exportError.set(null)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Undo Toast for Exercise / Workout Deletion -->
+    @if (undoState(); as undo) {
+      <div class="toast-undo" role="alert" aria-live="assertive">
+        <div class="toast-undo-left">
+          <mat-icon>delete_sweep</mat-icon>
+          <span>{{ undo.message }}</span>
+        </div>
+        <div class="toast-undo-actions">
+          <button
+            type="button"
+            class="btn-undo-restore"
+            title="Desfazer exclusão"
+            aria-label="Desfazer exclusão"
+            (click)="onUndoDelete()">
+            <mat-icon>undo</mat-icon>
+            <span>Desfazer</span>
+          </button>
+          <button
+            type="button"
+            class="btn-undo-close"
+            title="Fechar notificação"
+            aria-label="Fechar notificação"
+            (click)="dismissUndoToast()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Clean Navigation Tabs -->
+    <nav class="nav-tabs" aria-label="Abas do painel">
+      <button 
+        type="button" 
+        class="tab-item" 
+        [class.active]="plannerService.activeSection() === 'treinos'"
+        (click)="plannerService.activeSection.set('treinos')">
+        <mat-icon>table_chart</mat-icon>
+        <span>Planilha de Treinos</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-item" 
+        [class.active]="plannerService.activeSection() === 'metas'"
+        (click)="plannerService.activeSection.set('metas')">
+        <mat-icon>tune</mat-icon>
+        <span>Metas & Valores Customizados</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-item" 
+        [class.active]="plannerService.activeSection() === 'dieta'"
+        (click)="plannerService.activeSection.set('dieta')">
+        <mat-icon>restaurant_menu</mat-icon>
+        <span>Dieta & Refeições</span>
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-item" 
+        [class.active]="plannerService.activeSection() === 'resumo'"
+        (click)="plannerService.activeSection.set('resumo')">
+        <mat-icon>description</mat-icon>
+        <span>Ficha Resumo</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="planner-main">
+    <!-- ============================================================== -->
+    <!-- ABA 1: PLANILHA DE TREINOS LIMPA (COMO PLANILHA EM BRANCO)     -->
+    <!-- ============================================================== -->
+    @if (plannerService.activeSection() === 'treinos') {
+      <div class="section-container workout-planilha-view">
+        
+        <!-- Contextual Bar (Substitui o H2 redundante com indicação contextual limpa) -->
+        @if (getActiveWorkout(); as activeW) {
+          <div class="sheet-context-bar">
+            <div class="context-workout-indicator">
+              <span class="context-pill-badge">{{ activeW.identificador }}</span>
+              <span class="context-pill-title">{{ activeW.nome }}</span>
+              <span class="context-pill-sep">·</span>
+              <span class="context-pill-count">{{ activeW.exercicios.length }} {{ activeW.exercicios.length === 1 ? 'exercício' : 'exercícios' }}</span>
+              @if (activeW.foco) {
+                <span class="context-pill-sep">·</span>
+                <span class="context-pill-focus">{{ activeW.foco }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Top Toolbar: Day Tabs (Abas de Treinos com badge discreto e nome conciso) -->
+        <div class="sheet-toolbar">
+          <div class="day-tabs-scroll" role="tablist" aria-label="Fichas de treino">
+            @if (plannerService.planner(); as pl) {
+              @for (w of pl.treinos; track w.id) {
+                <button 
+                  type="button" 
+                  role="tab"
+                  class="day-pill" 
+                  [class.active]="plannerService.activeWorkoutId() === w.id"
+                  [attr.aria-selected]="plannerService.activeWorkoutId() === w.id"
+                  [title]="w.identificador + ' — ' + w.nome + (w.foco ? ' · Foco: ' + w.foco : '')"
+                  [attr.aria-label]="w.identificador + ' ' + w.nome"
+                  (click)="plannerService.activeWorkoutId.set(w.id)">
+                  <span class="day-code">{{ w.identificador }}</span>
+                  <span class="day-title-label" [title]="w.nome">{{ w.nome }}</span>
+                  <span class="day-badge-count-muted" [title]="w.exercicios.length + ' exercícios'">{{ w.exercicios.length }}</span>
+                </button>
+              }
+            }
+
+            <button 
+              type="button" 
+              class="btn-add-day" 
+              title="Adicionar nova ficha de treino"
+              aria-label="Adicionar nova ficha de treino"
+              (click)="plannerService.addWorkoutDay('Novo Treino', 'Geral')">
+              <mat-icon>add</mat-icon>
+              <span>Novo Treino</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Workspace Split: Main Spreadsheet + Lateral Science Sidebar -->
+        <div class="workout-workspace-split with-sidebar page-layout">
+          
+          <!-- Coluna Principal da Planilha -->
+          <div class="sheet-main-col">
+            @if (getActiveWorkout(); as activeW) {
+              
+              <!-- 7. Card "Resumo de Volume" (Mini Bar Chart Horizontal em Grid Responsivo) -->
+              <div class="workout-balance-card">
+                <div class="balance-card-header">
+                  <div class="balance-title-row">
+                    <mat-icon class="balance-title-icon">bar_chart</mat-icon>
+                    <div>
+                      <h4 class="balance-card-title">Resumo de Volume — {{ activeW.identificador }}</h4>
+                      <p class="balance-card-subtitle">Séries contabilizadas por grupo muscular nesta sessão</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="balance-card-body">
+                  @if (getActiveWorkoutMuscleBreakdown().length > 0) {
+                    <div class="volume-barchart-grid">
+                      @for (item of getActiveWorkoutMuscleBreakdown(); track item.muscle) {
+                        <button
+                          type="button"
+                          class="volume-bar-item"
+                          [title]="'Ver exercícios científicos para ' + item.muscle + ' (' + item.sets + ' séries)'"
+                          (click)="searchScienceMuscle(item.muscle)">
+                          <span class="bar-muscle-name">{{ item.muscle }}</span>
+                          <div class="bar-track">
+                            <div 
+                              class="bar-progress-fill" 
+                              [style.width.%]="(item.sets / getActiveWorkoutMaxMuscleSets()) * 100">
+                            </div>
+                          </div>
+                          <span class="bar-sets-val">{{ item.sets }}</span>
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <p class="empty-volume-hint">Adicione exercícios na planilha ou escolha no painel lateral para visualizar a distribuição de séries.</p>
+                  }
+                </div>
+              </div>
+
+              <!-- 8. Card do Editor (Nome / Foco / Observações Gerais integrados) -->
+              <div class="workout-meta-card">
+                <div class="workout-meta-grid">
+                  <!-- Linha 1: Badge Treino + Nome do Treino + Foco Muscular + Excluir Treino -->
+                  <div class="meta-row-primary">
+                    <div class="meta-badge-box" title="Identificador da sessão">
+                      <span class="workout-badge-static">{{ activeW.identificador }}</span>
+                    </div>
+
+                    <div class="meta-field-box field-grow-2">
+                      <label for="workoutNameInput" class="meta-overline">Nome do Treino</label>
+                      <input 
+                        id="workoutNameInput"
+                        type="text" 
+                        class="ghost-editor-input" 
+                        placeholder="Ex: Treino A - Superior Foco Dorsal"
+                        [value]="activeW.nome" 
+                        [title]="activeW.nome || 'Nome do treino'"
+                        (input)="updateWorkoutTitle(activeW.id, $any($event.target).value)" />
+                    </div>
+
+                    <div class="meta-field-box field-grow-1">
+                      <label for="workoutFocusInput" class="meta-overline">Foco Muscular</label>
+                      <input 
+                        id="workoutFocusInput"
+                        type="text" 
+                        class="ghost-editor-input" 
+                        placeholder="Ex: Dorsal, Bíceps e Trapézio"
+                        [value]="activeW.foco" 
+                        [title]="activeW.foco || 'Foco muscular'"
+                        (input)="updateWorkoutFocus(activeW.id, $any($event.target).value)" />
+                    </div>
+
+                    <div class="meta-action-box">
+                      <button 
+                        type="button" 
+                        class="btn-ghost-delete-session" 
+                        title="Excluir este treino"
+                        aria-label="Excluir este treino"
+                        (click)="requestDeleteWorkout(activeW.id)">
+                        <mat-icon>delete_outline</mat-icon>
+                        <span>Excluir</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Linha 2: Observações Gerais integrado com label própria e textarea de 2 linhas -->
+                  <div class="meta-obs-container">
+                    <label for="workoutObsTextarea" class="meta-overline">Observações Gerais</label>
+                    <textarea 
+                      id="workoutObsTextarea"
+                      rows="2"
+                      class="ghost-editor-textarea"
+                      placeholder="Instruções gerais da sessão (aquecimento, descanso de 2min nos compostos pesados, cadência, notas específicas)..."
+                      [value]="activeW.observacoes || ''"
+                      [title]="activeW.observacoes || 'Observações gerais do treino'"
+                      aria-label="Observações gerais do treino"
+                      (input)="updateWorkoutObservation(activeW.id, $any($event.target).value)"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Datalists para Autocomplete -->
+              <datalist id="exercisePresetsList">
+                @for (cat of exercisePresetCategories; track cat.group) {
+                  @for (exName of cat.exercises; track exName) {
+                    <option [value]="exName">{{ cat.group }}: {{ exName }}</option>
+                  }
+                }
+              </datalist>
+
+              <datalist id="repsPresetsList">
+                @for (rep of commonRepsPresets; track rep) {
+                  <option [value]="rep"></option>
+                }
+              </datalist>
+
+              <datalist id="muscleGroupsList">
+                @for (m of muscleGroups; track m) {
+                  <option [value]="m"></option>
+                }
+              </datalist>
+
+              <!-- 3. TABELA DE EXERCÍCIOS COM INPUTS FANTASMAS, DRAG HANDLE E AÇÕES LIMPAS -->
+              <div class="sheet-table-card table-card">
+                <div class="sheet-table-scroll table-scroll" role="region" aria-label="Tabela de exercícios do treino">
+                  <table class="sheet-table" aria-label="Planilha de Exercícios">
+                    <colgroup>
+                      <col class="col-drag" style="width: 40px;">
+                      <col class="col-ex" style="width: minmax(140px, 1.2fr);">
+                      <col class="col-muscle" style="width: minmax(110px, 0.8fr);">
+                      <col class="col-sets" style="width: 52px;">
+                      <col class="col-reps" style="width: 64px;">
+                      <col class="col-rest" style="width: 64px;">
+                      <col class="col-obs" style="width: minmax(44px, 1.5fr);">
+                    </colgroup>
+                    <thead class="sheet-thead">
+                      <tr class="sheet-header-row exercise-header">
+                        <th class="th-drag text-center" scope="col" aria-label="Ordem" title="Reordenar exercício"></th>
+                        <th class="th-ex" scope="col">Exercício</th>
+                        <th class="th-muscle" scope="col">Músculo</th>
+                        <th class="th-sets text-center" scope="col" title="Quantidade de séries">Séries</th>
+                        <th class="th-reps text-center" scope="col" title="Faixa de repetições (ex: 8-12)">Reps</th>
+                        <th class="th-rest text-center" scope="col" title="Descanso entre séries, em segundos">Descanso</th>
+                        <th class="th-obs" scope="col" title="Observações e dicas técnicas">Observações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @if (activeW.exercicios.length === 0) {
+                        <tr class="empty-sheet-row">
+                          <td colspan="7" class="empty-cell">
+                            <div class="empty-sheet-content">
+                              <mat-icon class="empty-icon">playlist_add</mat-icon>
+                              <p class="empty-title">Esta planilha de treino está vazia.</p>
+                              <p class="empty-desc">Adicione sua primeira linha ou selecione exercícios do painel científico ao lado.</p>
+                              <button type="button" class="btn-dashed-add-exercise inline-add" (click)="onAddBlankRow()">
+                                <mat-icon>add</mat-icon>
+                                <span>Adicionar Exercício na Planilha</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      } @else {
+                        @for (ex of activeW.exercicios; track ex.id; let idx = $index) {
+                          <tr 
+                            class="sheet-row exercise-row" 
+                            [class.is-selected]="selectedExerciseId() === ex.id"
+                            [class.is-editing-obs]="activeObsExerciseId() === ex.id"
+                            [class.is-dragging]="draggedRowIndex() === idx"
+                            [attr.id]="'exercise-row-' + ex.id"
+                            [attr.aria-selected]="selectedExerciseId() === ex.id"
+                            tabindex="0"
+                            role="row"
+                            [draggable]="true"
+                            (click)="onRowClick(ex.id, $event)"
+                            (focusin)="onRowFocusIn(ex.id)"
+                            (dragstart)="onDragStart(idx, $event)"
+                            (dragover)="onDragOver($event)"
+                            (drop)="onDropRow(activeW.id, idx, $event)"
+                            (dragend)="draggedRowIndex.set(null)">
+                            
+                            <!-- 4. Drag Handle (⋮⋮) à esquerda da linha para reordenar -->
+                            <td class="td-drag" title="Arrastar para reordenar">
+                              <div class="drag-handle-wrap" aria-label="Arrastar para reordenar">
+                                <mat-icon class="drag-handle-icon">drag_indicator</mat-icon>
+                                <span class="row-order-num">{{ idx + 1 }}</span>
+                              </div>
+                            </td>
+
+                            <!-- 3. Exercício: Display de até 3 linhas completas em repouso e textarea com auto-grow ao focar -->
+                            <td class="td-ex" [title]="ex.nome || 'Nome do exercício'">
+                              <div class="ghost-cell-box">
+                                @if (isEditing(ex.id, 'nome')) {
+                                  <textarea 
+                                    rows="1"
+                                    class="ghost-table-input exercise-name-input is-editing" 
+                                    [attr.data-field]="'nome'"
+                                    [attr.data-id]="ex.id"
+                                    placeholder="Nome do exercício..."
+                                    [value]="ex.nome" 
+                                    [title]="ex.nome || 'Nome do exercício'"
+                                    aria-label="Exercício da linha {{ idx + 1 }}"
+                                    (keydown.enter)="$event.preventDefault()"
+                                    (input)="updateExerciseField(activeW.id, ex.id, 'nome', $any($event.target).value); autoGrowTextarea($event.target)"
+                                    (blur)="onEditingCellBlur()"
+                                    (keydown.escape)="stopEditing()"></textarea>
+                                } @else {
+                                  <div 
+                                    class="ghost-table-input exercise-name-display"
+                                    tabindex="0"
+                                    role="textbox"
+                                    [attr.data-field]="'nome'"
+                                    [attr.data-id]="ex.id"
+                                    [title]="ex.nome || 'Nome do exercício'"
+                                    aria-label="Exercício da linha {{ idx + 1 }}"
+                                    (click)="startEditing(ex.id, 'nome', $event)"
+                                    (focus)="startEditing(ex.id, 'nome', $event)">
+                                    {{ ex.nome || 'Nome do exercício...' }}
+                                  </div>
+                                }
+                              </div>
+                            </td>
+
+                            <!-- 3. Músculo: Estrutura em bloco normal, principal até 2 linhas e subgrupo em 12px muted sem duplicação -->
+                            <td class="td-muscle" [title]="ex.grupoMuscular || 'Grupo muscular alvo'">
+                              <div class="muscle-stacked-box">
+                                @if (isEditing(ex.id, 'grupoMuscular')) {
+                                  <textarea 
+                                    rows="1" 
+                                    class="ghost-table-input muscle-group-input is-editing" 
+                                    [attr.data-field]="'grupoMuscular'"
+                                    [attr.data-id]="ex.id"
+                                    placeholder="Músculo"
+                                    [value]="ex.grupoMuscular" 
+                                    [title]="ex.grupoMuscular || 'Grupo muscular alvo'"
+                                    aria-label="Músculo alvo da linha {{ idx + 1 }}"
+                                    (keydown.enter)="$event.preventDefault()"
+                                    (input)="updateExerciseField(activeW.id, ex.id, 'grupoMuscular', $any($event.target).value); autoGrowTextarea($event.target)"
+                                    (blur)="onEditingCellBlur()"
+                                    (keydown.escape)="stopEditing()"></textarea>
+                                } @else {
+                                  <div 
+                                    class="ghost-table-input muscle-group-input text-display"
+                                    tabindex="0"
+                                    role="textbox"
+                                    [attr.data-field]="'grupoMuscular'"
+                                    [attr.data-id]="ex.id"
+                                    [title]="ex.grupoMuscular || 'Grupo muscular alvo'"
+                                    aria-label="Músculo alvo da linha {{ idx + 1 }}"
+                                    (click)="startEditing(ex.id, 'grupoMuscular', $event)"
+                                    (focus)="startEditing(ex.id, 'grupoMuscular', $event)">
+                                    {{ ex.grupoMuscular || 'Músculo' }}
+                                  </div>
+                                }
+                                @if (getMuscleSubDetail(ex.grupoMuscular); as subDetail) {
+                                  <div class="muscle-subdetail" [title]="subDetail">{{ subDetail }}</div>
+                                }
+                              </div>
+                            </td>
+
+                            <!-- 3. Séries: Numérico centralizado com largura fixa e tabular-nums -->
+                            <td class="td-sets">
+                              <input 
+                                type="number" 
+                                class="ghost-table-input cell-numeric text-center" 
+                                min="1" 
+                                max="30"
+                                [value]="ex.series" 
+                                [title]="ex.series + ' séries'"
+                                aria-label="Séries da linha {{ idx + 1 }}"
+                                (input)="updateExerciseField(activeW.id, ex.id, 'series', $any($event.target).value)" />
+                            </td>
+
+                            <!-- 3. Reps: Formato tabular padronizado (8-12) -->
+                            <td class="td-reps">
+                              <input 
+                                type="text" 
+                                class="ghost-table-input cell-numeric text-center" 
+                                list="repsPresetsList"
+                                placeholder="8-12"
+                                [value]="formatReps(ex.repeticoes)" 
+                                [title]="'Repetições: ' + formatReps(ex.repeticoes)"
+                                aria-label="Repetições da linha {{ idx + 1 }}"
+                                (change)="updateExerciseField(activeW.id, ex.id, 'repeticoes', $any($event.target).value)"
+                                (input)="updateExerciseField(activeW.id, ex.id, 'repeticoes', $any($event.target).value)" />
+                            </td>
+
+                            <!-- 3. Descanso: Numérico centralizado com largura fixa e tabular-nums -->
+                            <td class="td-rest">
+                              <input 
+                                type="number" 
+                                class="ghost-table-input cell-numeric text-center" 
+                                min="0" 
+                                step="5"
+                                placeholder="60"
+                                [value]="ex.descansoSegundos" 
+                                [title]="ex.descansoSegundos + 's descanso'"
+                                aria-label="Descanso em segundos da linha {{ idx + 1 }}"
+                                (input)="updateExerciseField(activeW.id, ex.id, 'descansoSegundos', $any($event.target).value)" />
+                            </td>
+
+                            <!-- Observações: Display de até 3 linhas completas em repouso e textarea auto-grow no fluxo ao focar -->
+                            <!-- Observações: Modo Leitura com 2 linhas e Popover Ancorado Flutuante para Edição -->
+                            <td class="td-obs" [class.is-active-editor]="activeObsExerciseId() === ex.id">
+                              <div 
+                                class="obs-cell"
+                                [class.is-placeholder]="!ex.observacoes"
+                                [attr.data-id]="ex.id"
+                                tabindex="0"
+                                role="button"
+                                [title]="ex.observacoes || 'Clique para adicionar observações e instruções técnicas'"
+                                aria-label="Observações da linha {{ idx + 1 }}"
+                                (click)="startObsEditing(activeW.id, ex.id, ex.observacoes, $event)"
+                                (keydown.enter)="startObsEditing(activeW.id, ex.id, ex.observacoes, $event)">
+                                {{ ex.observacoes || 'Adicionar observação...' }}
+                              </div>
+
+                              @if (activeObsExerciseId() === ex.id) {
+                                <div 
+                                  class="obs-popover" 
+                                  role="dialog" 
+                                  aria-label="Editar observações" 
+                                  (click)="$event.stopPropagation()">
+                                  <textarea 
+                                    class="obs-popover-textarea"
+                                    placeholder="Adicione instruções, cadência, amplitude..."
+                                    [value]="obsDraftText()"
+                                    (input)="onObsTextareaInput($any($event.target).value)"
+                                    (keydown)="onObsKeydown($event)"></textarea>
+                                  
+                                  <div class="obs-popover-footer">
+                                    <div class="obs-popover-hint">
+                                      Esc para fechar · Ctrl+Enter para salvar
+                                    </div>
+                                    <div class="obs-popover-right">
+                                      <span class="obs-char-counter" [class.counter-warning]="obsDraftText().length > 180">
+                                        {{ obsDraftText().length }}/200
+                                      </span>
+                                      <button type="button" class="btn-obs-save" (click)="saveObsEditing()">
+                                        Salvar
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              }
+                            </td>
+
+                          </tr>
+                        }
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Barra de Ações Mobile/Touch para linha selecionada -->
+                @if (selectedExerciseId()) {
+                  <div class="touch-row-actions-bar" role="toolbar" aria-label="Ações do exercício selecionado">
+                    <div class="touch-bar-info">
+                      <span class="touch-bar-dot"></span>
+                      <span>Linha selecionada</span>
+                    </div>
+                    <div class="touch-bar-buttons">
+                      <button 
+                        type="button" 
+                        class="btn-touch-action duplicate"
+                        title="Duplicar exercício selecionado"
+                        aria-label="Duplicar exercício"
+                        (click)="duplicateSelectedExercise()">
+                        <mat-icon>content_copy</mat-icon>
+                        <span>Duplicar</span>
+                      </button>
+                      <button 
+                        type="button" 
+                        class="btn-touch-action delete"
+                        title="Excluir exercício selecionado"
+                        aria-label="Excluir exercício"
+                        (click)="deleteSelectedExercise()">
+                        <mat-icon>delete_outline</mat-icon>
+                        <span>Excluir</span>
+                      </button>
+                    </div>
+                  </div>
+                }
+
+                <!-- 9. Linha tracejada de largura total no final da tabela -->
+                <div class="sheet-add-block">
+                  <button 
+                    type="button" 
+                    class="btn-dashed-add-exercise" 
+                    title="Adicionar novo exercício na planilha"
+                    aria-label="Adicionar Exercício na Planilha"
+                    (click)="onAddBlankRow()">
+                    <mat-icon>add</mat-icon>
+                    <span>Adicionar Exercício na Planilha</span>
+                  </button>
+                </div>
+
+                <!-- 9. Rodapé com dica de teclado e 3 mini-stats alinhados -->
+                <div class="sheet-stats-footer">
+                  <span class="footer-keyboard-hint">
+                    Clique em uma linha para selecionar · Delete exclui · Ctrl+D duplica
+                  </span>
+                  <div class="footer-mini-stats">
+                    <div class="mini-stat-card">
+                      <span class="stat-number">{{ activeW.exercicios.length }}</span>
+                      <span class="stat-label">Exercícios</span>
+                    </div>
+                    <div class="mini-stat-card">
+                      <span class="stat-number">{{ getActiveWorkoutTotalSeries() }}</span>
+                      <span class="stat-label">Séries Totais</span>
+                    </div>
+                    <div class="mini-stat-card">
+                      <span class="stat-number">~{{ getActiveWorkoutEstimatedMinutes() }} min</span>
+                      <span class="stat-label">Tempo Est.</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Modal de Confirmação para Excluir Treino -->
+              @if (workoutToDelete()) {
+                <div class="modal-backdrop-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteWorkoutHeading">
+                  <div class="modal-dialog-card">
+                    <div class="dialog-icon-wrap">
+                      <mat-icon class="icon-warning">warning</mat-icon>
+                    </div>
+                    <h4 id="confirmDeleteWorkoutHeading" class="dialog-title">Excluir {{ activeW.identificador }}?</h4>
+                    <p class="dialog-desc">
+                      Tem certeza que deseja excluir o treino <strong>"{{ activeW.identificador }} — {{ activeW.nome }}"</strong>? Esta ação removerá os {{ activeW.exercicios.length }} exercícios associados.
+                    </p>
+                    <div class="dialog-actions-row">
+                      <button type="button" class="btn-dialog-cancel" (click)="cancelDeleteWorkout()">
+                        Cancelar
+                      </button>
+                      <button type="button" class="btn-dialog-danger" (click)="confirmDeleteWorkout()">
+                        Sim, Excluir Treino
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+
+            }
+          </div>
+
+          <!-- 10. Painel Lateral "Exercícios Baseados na Ciência" -->
+          <aside class="science-sidebar" aria-label="Biblioteca Científica de Exercícios">
+            <div class="sidebar-header">
+              <div class="sidebar-title-group">
+                <h4 class="sidebar-title">Exercícios Baseados na Ciência</h4>
+                <p class="sidebar-subtitle">
+                  Sincronizado com <strong>{{ getActiveWorkout()?.identificador || 'Treino Ativo' }}</strong>
+                </p>
+              </div>
+            </div>
+
+            <!-- Busca: ícone de lupa à esquerda, sem botão de seta, busca ao digitar -->
+            <div class="sidebar-controls">
+              <div class="sidebar-search-box">
+                <mat-icon class="search-icon" aria-hidden="true">search</mat-icon>
+                <input
+                  type="text"
+                  placeholder="Buscar grupo muscular…"
+                  aria-label="Buscar grupo muscular na biblioteca científica"
+                  [value]="scienceMuscleQuery()"
+                  (input)="onScienceSearchInput($any($event.target).value)"
+                  (keyup.enter)="searchScienceMuscle()" />
+                @if (plannerService.aiLoading()) {
+                  <mat-icon class="spin-icon-search">sync</mat-icon>
+                }
+              </div>
+            </div>
+
+            <!-- Resultados -->
+            @if (plannerService.aiSuggestions(); as result) {
+              <div class="sidebar-status-bar">
+                <div class="status-info-row">
+                  <!-- Título do grupo: permitir 2 linhas com line-clamp: 2 -->
+                  <span class="status-muscle-name" [title]="result.targetMuscle">{{ result.targetMuscle }}</span>
+                  
+                  <!-- Barra de progresso legível -->
+                  <div class="science-progress-pill" [title]="getInsertedCount(result.exercises) + ' de ' + result.exercises.length + ' na planilha'">
+                    <span class="progress-count-text">{{ getInsertedCount(result.exercises) }}/{{ result.exercises.length }} na planilha</span>
+                    <div class="progress-mini-track">
+                      <div class="progress-mini-fill" [style.width.%]="getScienceProgressPercent(result.exercises)"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <label class="sidebar-filter-toggle" title="Ocultar exercícios que já estão na planilha atual">
+                  <input
+                    type="checkbox"
+                    [checked]="hideInsertedScienceExercises()"
+                    (change)="hideInsertedScienceExercises.set($any($event.target).checked)" />
+                  <span class="filter-toggle-label">Ocultar inseridos</span>
+                </label>
+              </div>
+
+              <div class="sidebar-exercise-list">
+                @let sortedExercises = getSortedScienceExercises(result.exercises);
+                @if (sortedExercises.length === 0) {
+                  <div class="sidebar-empty-filtered">
+                    <mat-icon class="task-done-icon">task_alt</mat-icon>
+                    <p>Todos os {{ result.exercises.length }} exercícios recomendados para <strong>{{ result.targetMuscle }}</strong> já constam na planilha.</p>
+                    <button
+                      type="button"
+                      class="btn-show-inserted"
+                      (click)="hideInsertedScienceExercises.set(false)">
+                      Mostrar exercícios inseridos ({{ getInsertedCount(result.exercises) }})
+                    </button>
+                  </div>
+                } @else {
+                  @for (ex of sortedExercises; track ex.name) {
+                    @let inserted = isExerciseInserted(ex.name);
+                    <div 
+                      class="sidebar-ex-card" 
+                      [class.is-inserted]="inserted"
+                      [class.is-available]="!inserted"
+                      (click)="!inserted && insertScienceExerciseToSheet(ex)">
+                      
+                      <div class="ex-card-top">
+                        <strong class="ex-card-title" [title]="ex.name">{{ ex.name }}</strong>
+
+                        <!-- Botão Adicionar como ícone circular 32px no canto superior direito -->
+                        <button
+                          type="button"
+                          class="btn-circle-action"
+                          [class.is-inserted]="inserted"
+                          [title]="inserted ? 'Inserido na planilha — clique para remover' : 'Adicionar ' + ex.name + ' na planilha'"
+                          [attr.aria-label]="inserted ? 'Remover ' + ex.name : 'Adicionar ' + ex.name"
+                          (click)="$event.stopPropagation(); toggleScienceExerciseInSheet(ex)">
+                          <mat-icon>{{ inserted ? 'check' : 'add' }}</mat-icon>
+                        </button>
+                      </div>
+
+                      <!-- Metadados em uma linha com ícones pequenos e formatação limpa -->
+                      <div class="ex-card-meta-line" [title]="ex.muscle + ' · ' + ex.suggestedSets + ' séries · ' + formatReps(ex.suggestedReps) + ' reps · ' + formatRest(ex.suggestedRest) + ' descanso'">
+                        <span class="meta-muscle-badge">{{ ex.muscle }}</span>
+                        <span class="meta-dot">·</span>
+                        <span class="meta-stat-item">{{ ex.suggestedSets }} séries</span>
+                        <span class="meta-dot">·</span>
+                        <span class="meta-stat-item">{{ formatReps(ex.suggestedReps) }} reps</span>
+                        <span class="meta-dot">·</span>
+                        <span class="meta-stat-item">{{ formatRest(ex.suggestedRest) }} desc.</span>
+                      </div>
+
+                      <!-- Descrição técnica: 13px com line-clamp: 3 + "ver mais" -->
+                      <div class="ex-card-desc-wrap">
+                        <p class="ex-card-desc" [class.is-expanded]="isScienceNoteExpanded(ex.name)">
+                          {{ ex.whyBest }}
+                        </p>
+                        @if (ex.whyBest && ex.whyBest.length > 95) {
+                          <button 
+                            type="button" 
+                            class="btn-toggle-expand" 
+                            (click)="toggleScienceNote(ex.name, $event)">
+                            {{ isScienceNoteExpanded(ex.name) ? 'ver menos' : 'ver mais' }}
+                          </button>
+                        }
+                      </div>
+
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </aside>
+
+        </div>
+      </div>
+    }
+
+    <!-- ============================================================== -->
+    <!-- ABA 2: METAS METABÓLICAS E VALORES CUSTOMIZADOS                -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- ABA 2: METAS METABÓLICAS E VALORES CUSTOMIZADOS                -->
+    <!-- ============================================================== -->
+    @if (plannerService.activeSection() === 'metas') {
+      <div class="section-container goals-tab-container">
+        <form [formGroup]="customGoalsForm" (ngSubmit)="applyCustomGoals()" class="goals-card">
+          <!-- Card Header Limpo e Tipografia Elevada (sem toggle) -->
+          <div class="card-header-clean">
+            <div class="header-texts">
+              <h2 class="card-title">Metas & Valores Customizados</h2>
+              <p class="card-desc">
+                Defina manualmente cada valor energético, hídrico e macronutrientes da sua prescrição.
+              </p>
+            </div>
+          </div>
+
+          <!-- Grid Superior de Metas (4 colunas com minmax(0, 1fr) e gap 16px) -->
+          <div class="goals-grid">
+            <!-- 1. Meta Calórica Diária -->
+            <div class="metric-col-card">
+              <div class="metric-header-row">
+                <label class="metric-label" for="metaCaloriasField" title="Meta Calórica Diária">
+                  Meta Calórica Diária
+                </label>
+                <button 
+                  type="button" 
+                  class="btn-info-discrete"
+                  [class.active]="activeTooltipKey() === 'metaCalorias'"
+                  tabindex="0"
+                  aria-label="Sobre Meta Calórica Diária"
+                  aria-describedby="tooltip-metaCalorias"
+                  (mouseenter)="onTooltipTriggerEnter('metaCalorias', $event)"
+                  (mouseleave)="onTooltipTriggerLeave()"
+                  (focus)="onTooltipTriggerFocus('metaCalorias', $event)"
+                  (blur)="onTooltipTriggerBlur()"
+                  (click)="onTooltipTriggerClick('metaCalorias', $event)">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="metric-value-container">
+                <div class="metric-inline-input-wrap">
+                  <input 
+                    id="metaCaloriasField"
+                    type="number" 
+                    class="metric-inline-input font-tabular" 
+                    formControlName="calorias" 
+                    (input)="onGoalFieldChange('calorias')" />
+                  <span class="metric-unit-text">kcal/dia</span>
+                </div>
+              </div>
+
+              <div class="metric-caption-row">
+                <small class="metric-hint">
+                  Consumo diário prescrito para o objetivo
+                </small>
+                @if (isFieldCustomized('calorias')) {
+                  <button 
+                    type="button" 
+                    class="btn-restore-link"
+                    (click)="restoreField('calorias')"
+                    [title]="'Restaurar para ' + calculatedGoals().calorias + ' kcal'"
+                    aria-label="Restaurar Meta Calórica para valor calculado">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Restaurar {{ calculatedGoals().calorias }} kcal</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- 2. Gasto Total (GET) -->
+            <div class="metric-col-card">
+              <div class="metric-header-row">
+                <label class="metric-label" for="gastoTotalField" title="Gasto Total (GET)">
+                  Gasto Total (GET)
+                </label>
+                <button 
+                  type="button" 
+                  class="btn-info-discrete"
+                  [class.active]="activeTooltipKey() === 'gastoTotal'"
+                  tabindex="0"
+                  aria-label="Sobre Gasto Total (GET)"
+                  aria-describedby="tooltip-gastoTotal"
+                  (mouseenter)="onTooltipTriggerEnter('gastoTotal', $event)"
+                  (mouseleave)="onTooltipTriggerLeave()"
+                  (focus)="onTooltipTriggerFocus('gastoTotal', $event)"
+                  (blur)="onTooltipTriggerBlur()"
+                  (click)="onTooltipTriggerClick('gastoTotal', $event)">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="metric-value-container">
+                <div class="metric-inline-input-wrap">
+                  <input 
+                    id="gastoTotalField"
+                    type="number" 
+                    class="metric-inline-input font-tabular" 
+                    formControlName="gastoEnergeticoTotal" 
+                    (input)="onGoalFieldChange('gastoEnergeticoTotal')" />
+                  <span class="metric-unit-text">kcal/dia</span>
+                </div>
+              </div>
+
+              <div class="metric-caption-row">
+                <small class="metric-hint">
+                  Gasto com atividade física e efeito térmico
+                </small>
+                @if (isFieldCustomized('gastoEnergeticoTotal')) {
+                  <button 
+                    type="button" 
+                    class="btn-restore-link"
+                    (click)="restoreField('gastoEnergeticoTotal')"
+                    [title]="'Restaurar para ' + calculatedGoals().gastoEnergeticoTotal + ' kcal'"
+                    aria-label="Restaurar Gasto Total para valor calculado">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Restaurar {{ calculatedGoals().gastoEnergeticoTotal }} kcal</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- 3. Taxa Basal (TMB) -->
+            <div class="metric-col-card">
+              <div class="metric-header-row">
+                <label class="metric-label" for="taxaBasalField" title="Taxa Basal (TMB)">
+                  Taxa Basal (TMB)
+                </label>
+                <button 
+                  type="button" 
+                  class="btn-info-discrete"
+                  [class.active]="activeTooltipKey() === 'taxaBasal'"
+                  tabindex="0"
+                  aria-label="Sobre Taxa Basal (TMB)"
+                  aria-describedby="tooltip-taxaBasal"
+                  (mouseenter)="onTooltipTriggerEnter('taxaBasal', $event)"
+                  (mouseleave)="onTooltipTriggerLeave()"
+                  (focus)="onTooltipTriggerFocus('taxaBasal', $event)"
+                  (blur)="onTooltipTriggerBlur()"
+                  (click)="onTooltipTriggerClick('taxaBasal', $event)">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="metric-value-container">
+                <div class="metric-inline-input-wrap">
+                  <input 
+                    id="taxaBasalField"
+                    type="number" 
+                    class="metric-inline-input font-tabular" 
+                    formControlName="taxaMetabolicaBasal" 
+                    (input)="onGoalFieldChange('taxaMetabolicaBasal')" />
+                  <span class="metric-unit-text">kcal/dia</span>
+                </div>
+              </div>
+
+              <div class="metric-caption-row">
+                <small class="metric-hint">
+                  Mifflin-St Jeor: calorias mínimas em repouso
+                </small>
+                @if (isFieldCustomized('taxaMetabolicaBasal')) {
+                  <button 
+                    type="button" 
+                    class="btn-restore-link"
+                    (click)="restoreField('taxaMetabolicaBasal')"
+                    [title]="'Restaurar para ' + calculatedGoals().taxaMetabolicaBasal + ' kcal'"
+                    aria-label="Restaurar Taxa Basal para valor calculado">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Restaurar {{ calculatedGoals().taxaMetabolicaBasal }} kcal</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- 4. Meta de Água (com chip 35 mL/kg na linha da legenda) -->
+            <div class="metric-col-card">
+              <div class="metric-header-row">
+                <label class="metric-label" for="metaAguaField" title="Meta de Água">
+                  Meta de Água
+                </label>
+                <button 
+                  type="button" 
+                  class="btn-info-discrete"
+                  [class.active]="activeTooltipKey() === 'metaAgua'"
+                  tabindex="0"
+                  aria-label="Sobre Meta de Água"
+                  aria-describedby="tooltip-metaAgua"
+                  (mouseenter)="onTooltipTriggerEnter('metaAgua', $event)"
+                  (mouseleave)="onTooltipTriggerLeave()"
+                  (focus)="onTooltipTriggerFocus('metaAgua', $event)"
+                  (blur)="onTooltipTriggerBlur()"
+                  (click)="onTooltipTriggerClick('metaAgua', $event)">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+              </div>
+
+              <div class="metric-value-container">
+                <div class="metric-inline-input-wrap">
+                  <input 
+                    id="metaAguaField"
+                    type="number" 
+                    class="metric-inline-input font-tabular" 
+                    formControlName="metaAguaMl" 
+                    (input)="onGoalFieldChange('metaAguaMl')" />
+                  <span class="metric-unit-text">mL/dia</span>
+                </div>
+              </div>
+
+              <div class="metric-caption-row">
+                <small class="metric-hint">
+                  Baseado em 35 mL/kg de peso
+                </small>
+                @if (isFieldCustomized('metaAguaMl')) {
+                  <button 
+                    type="button" 
+                    class="btn-restore-link"
+                    (click)="restoreField('metaAguaMl')"
+                    [title]="'Restaurar para ' + calculatedGoals().metaAguaMl + ' mL'"
+                    aria-label="Restaurar Meta de Água para valor calculado">
+                    <mat-icon>refresh</mat-icon>
+                    <span>Restaurar {{ calculatedGoals().metaAguaMl }} mL</span>
+                  </button>
+                } @else {
+                  <span class="chip-caption-water" title="Recomendação de 35 mL por kg de peso corporal">35 mL/kg</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Balanço Energético e Distribuição dos Macros (Dois blocos visuais distintos) -->
+          @let macroDiff = getMacroDifference();
+          @let macroPcts = getMacroPercentages();
+          <div class="metabolic-insights-grid">
+            <!-- Bloco 1: Balanço Energético (Meta − GET) -->
+            <div class="insight-block-card">
+              <span class="insight-block-overline">Balanço Energético (Meta − GET)</span>
+              
+              <div class="balance-display-row">
+                <span class="balance-number-value">
+                  {{ calculateTdeeDifference() > 0 ? '+' : '' }}{{ calculateTdeeDifference() }} kcal
+                </span>
+                
+                @if (calculateTdeeDifference() === 0) {
+                  <span class="context-chip maintenance">
+                    Manutenção
+                  </span>
+                } @else if (calculateTdeeDifference() < 0) {
+                  <span class="context-chip deficit">
+                    Déficit Calórico
+                  </span>
+                } @else {
+                  <span class="context-chip surplus">
+                    Superávit Calórico
+                  </span>
+                }
+              </div>
+
+              <p class="insight-block-caption">
+                Diferença diária entre o consumo calórico prescrito e o gasto total.
+              </p>
+            </div>
+
+            <!-- Bloco 2: Distribuição dos Macros com barra empilhada horizontal -->
+            <div class="insight-block-card">
+              <div class="insight-header-between">
+                <span class="insight-block-overline">Distribuição dos Macros</span>
+                <span class="macros-sum-indicator font-tabular">
+                  {{ calculateMacrosKcal() }} de {{ customGoalsForm.value.calorias || 0 }} kcal
+                </span>
+              </div>
+
+              <!-- Barra empilhada horizontal P / C / G -->
+              <div class="macro-stacked-bar" role="progressbar" aria-label="Distribuição calórica de macronutrientes">
+                <span 
+                  class="macro-segment seg-prot" 
+                  [style.width.%]="macroPcts.protPct"
+                  title="Proteínas: {{ macroPcts.protPct }}%">
+                </span>
+                <span 
+                  class="macro-segment seg-carb" 
+                  [style.width.%]="macroPcts.carbPct"
+                  title="Carboidratos: {{ macroPcts.carbPct }}%">
+                </span>
+                <span 
+                  class="macro-segment seg-fat" 
+                  [style.width.%]="macroPcts.fatPct"
+                  title="Gorduras: {{ macroPcts.fatPct }}%">
+                </span>
+              </div>
+
+              <!-- Indicador de match da meta -->
+              <div class="macro-match-row">
+                @if (macroDiff.isMatch) {
+                  <div class="macro-status-pill match">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Bate com a meta calórica</span>
+                  </div>
+                } @else {
+                  <div class="macro-status-pill warning" [title]="macroDiff.message">
+                    <mat-icon>info</mat-icon>
+                    <span>{{ macroDiff.message }}</span>
+                  </div>
+                }
+
+                <div class="macro-legend-dots">
+                  <span class="legend-dot-item">
+                    <span class="dot prot"></span>
+                    <span>P: {{ customGoalsForm.value.proteinaG || 0 }}g</span>
+                  </span>
+                  <span class="legend-dot-item">
+                    <span class="dot carb"></span>
+                    <span>C: {{ customGoalsForm.value.carboidratoG || 0 }}g</span>
+                  </span>
+                  <span class="legend-dot-item">
+                    <span class="dot fat"></span>
+                    <span>G: {{ customGoalsForm.value.gorduraG || 0 }}g</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seção de Macronutrientes e Fibras -->
+          <div class="macros-section-card">
+            <div class="macros-section-header">
+              <h3 class="section-subtitle">Macronutrientes e Fibras</h3>
+              <p class="section-subdesc">
+                Defina as quantidades individuais de proteínas, carboidratos, gorduras e fibras.
+              </p>
+            </div>
+
+            <!-- Grid de 4 colunas com minmax(0, 1fr) idêntico e alinhado ao de métricas -->
+            <div class="macros-grid">
+              <!-- 1. Proteínas (Azul --macro-protein #60A5FA) -->
+              <div class="macro-card-item macro-card-prot">
+                <div class="macro-card-header">
+                  <div class="macro-label-with-dot">
+                    <span class="macro-color-dot dot-prot"></span>
+                    <label class="macro-field-label" for="protField" title="Proteínas (P)">Proteínas (P)</label>
+                  </div>
+                  <button 
+                    type="button" 
+                    class="btn-info-discrete"
+                    [class.active]="activeTooltipKey() === 'macroProteinas'"
+                    tabindex="0"
+                    aria-label="Sobre Proteínas (P)"
+                    aria-describedby="tooltip-macroProteinas"
+                    (mouseenter)="onTooltipTriggerEnter('macroProteinas', $event)"
+                    (mouseleave)="onTooltipTriggerLeave()"
+                    (focus)="onTooltipTriggerFocus('macroProteinas', $event)"
+                    (blur)="onTooltipTriggerBlur()"
+                    (click)="onTooltipTriggerClick('macroProteinas', $event)">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
+
+                <div class="macro-value-container">
+                  <div class="macro-inline-input-wrap">
+                    <input 
+                      id="protField"
+                      type="number" 
+                      class="macro-inline-input font-tabular"
+                      formControlName="proteinaG" 
+                      (input)="onGoalFieldChange('proteinaG')" />
+                    <span class="macro-unit-text">g</span>
+                  </div>
+                </div>
+
+                <div class="macro-caption-row">
+                  <span class="macro-sub-text">
+                    4 kcal/g · total de {{ (customGoalsForm.value.proteinaG || 0) * 4 }} kcal
+                  </span>
+                  @if (isFieldCustomized('proteinaG')) {
+                    <button 
+                      type="button" 
+                      class="btn-restore-link"
+                      (click)="restoreField('proteinaG')"
+                      [title]="'Restaurar para ' + calculatedGoals().proteinaG + ' g'"
+                      aria-label="Restaurar Proteínas para valor calculado">
+                      <mat-icon>refresh</mat-icon>
+                      <span>Restaurar {{ calculatedGoals().proteinaG }} g</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- 2. Carboidratos (Âmbar --macro-carb #FBBF24) -->
+              <div class="macro-card-item macro-card-carb">
+                <div class="macro-card-header">
+                  <div class="macro-label-with-dot">
+                    <span class="macro-color-dot dot-carb"></span>
+                    <label class="macro-field-label" for="carbField" title="Carboidratos (C)">Carboidratos (C)</label>
+                  </div>
+                  <button 
+                    type="button" 
+                    class="btn-info-discrete"
+                    [class.active]="activeTooltipKey() === 'macroCarboidratos'"
+                    tabindex="0"
+                    aria-label="Sobre Carboidratos (C)"
+                    aria-describedby="tooltip-macroCarboidratos"
+                    (mouseenter)="onTooltipTriggerEnter('macroCarboidratos', $event)"
+                    (mouseleave)="onTooltipTriggerLeave()"
+                    (focus)="onTooltipTriggerFocus('macroCarboidratos', $event)"
+                    (blur)="onTooltipTriggerBlur()"
+                    (click)="onTooltipTriggerClick('macroCarboidratos', $event)">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
+
+                <div class="macro-value-container">
+                  <div class="macro-inline-input-wrap">
+                    <input 
+                      id="carbField"
+                      type="number" 
+                      class="macro-inline-input font-tabular"
+                      formControlName="carboidratoG" 
+                      (input)="onGoalFieldChange('carboidratoG')" />
+                    <span class="macro-unit-text">g</span>
+                  </div>
+                </div>
+
+                <div class="macro-caption-row">
+                  <span class="macro-sub-text">
+                    4 kcal/g · total de {{ (customGoalsForm.value.carboidratoG || 0) * 4 }} kcal
+                  </span>
+                  @if (isFieldCustomized('carboidratoG')) {
+                    <button 
+                      type="button" 
+                      class="btn-restore-link"
+                      (click)="restoreField('carboidratoG')"
+                      [title]="'Restaurar para ' + calculatedGoals().carboidratoG + ' g'"
+                      aria-label="Restaurar Carboidratos para valor calculado">
+                      <mat-icon>refresh</mat-icon>
+                      <span>Restaurar {{ calculatedGoals().carboidratoG }} g</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- 3. Gorduras (Rosa/Magenta --macro-fat #F472B6) -->
+              <div class="macro-card-item macro-card-fat">
+                <div class="macro-card-header">
+                  <div class="macro-label-with-dot">
+                    <span class="macro-color-dot dot-fat"></span>
+                    <label class="macro-field-label" for="fatField" title="Gorduras (G)">Gorduras (G)</label>
+                  </div>
+                  <button 
+                    type="button" 
+                    class="btn-info-discrete"
+                    [class.active]="activeTooltipKey() === 'macroGorduras'"
+                    tabindex="0"
+                    aria-label="Sobre Gorduras (G)"
+                    aria-describedby="tooltip-macroGorduras"
+                    (mouseenter)="onTooltipTriggerEnter('macroGorduras', $event)"
+                    (mouseleave)="onTooltipTriggerLeave()"
+                    (focus)="onTooltipTriggerFocus('macroGorduras', $event)"
+                    (blur)="onTooltipTriggerBlur()"
+                    (click)="onTooltipTriggerClick('macroGorduras', $event)">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
+
+                <div class="macro-value-container">
+                  <div class="macro-inline-input-wrap">
+                    <input 
+                      id="fatField"
+                      type="number" 
+                      class="macro-inline-input font-tabular"
+                      formControlName="gorduraG" 
+                      (input)="onGoalFieldChange('gorduraG')" />
+                    <span class="macro-unit-text">g</span>
+                  </div>
+                </div>
+
+                <div class="macro-caption-row">
+                  <span class="macro-sub-text">
+                    9 kcal/g · total de {{ (customGoalsForm.value.gorduraG || 0) * 9 }} kcal
+                  </span>
+                  @if (isFieldCustomized('gorduraG')) {
+                    <button 
+                      type="button" 
+                      class="btn-restore-link"
+                      (click)="restoreField('gorduraG')"
+                      [title]="'Restaurar para ' + calculatedGoals().gorduraG + ' g'"
+                      aria-label="Restaurar Gorduras para valor calculado">
+                      <mat-icon>refresh</mat-icon>
+                      <span>Restaurar {{ calculatedGoals().gorduraG }} g</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- 4. Fibras (Verde Esmeralda --macro-fiber #34D399) -->
+              <div class="macro-card-item macro-card-fiber">
+                <div class="macro-card-header">
+                  <div class="macro-label-with-dot">
+                    <span class="macro-color-dot dot-fiber"></span>
+                    <label class="macro-field-label" for="fiberField" title="Fibras (F)">Fibras (F)</label>
+                  </div>
+                  <button 
+                    type="button" 
+                    class="btn-info-discrete"
+                    [class.active]="activeTooltipKey() === 'macroFibras'"
+                    tabindex="0"
+                    aria-label="Sobre Fibras (F)"
+                    aria-describedby="tooltip-macroFibras"
+                    (mouseenter)="onTooltipTriggerEnter('macroFibras', $event)"
+                    (mouseleave)="onTooltipTriggerLeave()"
+                    (focus)="onTooltipTriggerFocus('macroFibras', $event)"
+                    (blur)="onTooltipTriggerBlur()"
+                    (click)="onTooltipTriggerClick('macroFibras', $event)">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
+
+                <div class="macro-value-container">
+                  <div class="macro-inline-input-wrap">
+                    <input 
+                      id="fiberField"
+                      type="number" 
+                      class="macro-inline-input font-tabular"
+                      formControlName="fibrasG" 
+                      (input)="onGoalFieldChange('fibrasG')" />
+                    <span class="macro-unit-text">g</span>
+                  </div>
+                </div>
+
+                <div class="macro-caption-row">
+                  <span class="macro-sub-text">
+                    Fibras não entram na soma calórica
+                  </span>
+                  @if (isFieldCustomized('fibrasG')) {
+                    <button 
+                      type="button" 
+                      class="btn-restore-link"
+                      (click)="restoreField('fibrasG')"
+                      [title]="'Restaurar para ' + calculatedGoals().fibrasG + ' g'"
+                      aria-label="Restaurar Fibras para valor calculado">
+                      <mat-icon>refresh</mat-icon>
+                      <span>Restaurar {{ calculatedGoals().fibrasG }} g</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações do formulário com botão primário verde e botão secundário de restauração -->
+          <div class="form-actions-bar">
+            <div class="unsaved-changes-indicator">
+              @if (hasUnsavedChanges()) {
+                <span class="unsaved-changes-pill">
+                  {{ unsavedChangesCount() }} {{ unsavedChangesCount() === 1 ? 'alteração não salva' : 'alterações não salvas' }}
+                </span>
+              }
+            </div>
+
+            <div class="action-buttons-group">
+              <button 
+                type="button" 
+                class="btn-restore-goals-secondary"
+                [disabled]="!hasAnyCustomizedField()"
+                (click)="restoreAllCalculatedValues()"
+                title="Restaurar valores calculados automaticamente conforme perfil"
+                aria-label="Restaurar valores calculados">
+                <mat-icon>restart_alt</mat-icon>
+                <span>Restaurar valores calculados</span>
+              </button>
+
+              <button 
+                type="submit" 
+                class="btn-apply-goals-primary"
+                [disabled]="!hasUnsavedChanges()"
+                aria-label="Aplicar e Salvar Metas">
+                <mat-icon>check</mat-icon>
+                <span>Aplicar e Salvar Metas</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tooltip Flutuante Acessível para Ícones ⓘ dos Cards -->
+          @if (activeTooltip(); as tooltip) {
+            <div 
+              class="card-info-tooltip"
+              [class.placement-top]="tooltipPosition().placement === 'top'"
+              [class.placement-bottom]="tooltipPosition().placement === 'bottom'"
+              [id]="tooltip.id"
+              role="tooltip"
+              [style.top.px]="tooltipPosition().top"
+              [style.left.px]="tooltipPosition().left"
+              (mouseenter)="onTooltipMouseEnter()"
+              (mouseleave)="onTooltipMouseLeave()">
+              <div class="card-tooltip-arrow" [style.left.px]="tooltipPosition().arrowLeft"></div>
+              <div class="card-tooltip-title">{{ tooltip.title }}</div>
+              <div class="card-tooltip-body">{{ tooltip.text }}</div>
+            </div>
+          }
+        </form>
+      </div>
+    }
+
+    <!-- ============================================================== -->
+    <!-- ABA 3: DIETA & REFEIÇÕES                                      -->
+    <!-- ============================================================== -->
+    @if (plannerService.activeSection() === 'dieta') {
+      <div class="section-container diet-tab-container">
+        
+        <!-- Versão sticky compacta de 56px ao rolar -->
+        @if (isDietScrolled() && plannerService.dietTotals(); as stickyTotals) {
+          <div class="diet-sticky-compact-bar" role="region" aria-label="Resumo compacto da dieta">
+            <div class="sticky-compact-inner font-tabular">
+              <div class="sticky-subtitle">
+                <span class="count-pill">{{ stickyTotals.itensCount }} itens · {{ (plannerService.planner()?.dieta?.length || 0) }} ref.</span>
+              </div>
+
+              <div class="sticky-metrics-row">
+                <!-- Calorias -->
+                @let sCalDiff = getGoalDifference(stickyTotals.calorias, getGoalMetric('calorias'), 'kcal');
+                <div class="sticky-metric-item">
+                  <span class="sticky-metric-lbl">Calorias</span>
+                  <span class="sticky-metric-val"><strong>{{ formatKcal(stickyTotals.calorias) }}</strong> / {{ formatKcal(getGoalMetric('calorias')) }} kcal</span>
+                  <div class="sticky-prog-track">
+                    <div class="sticky-prog-fill bar-cal" [style.width.%]="sCalDiff.pct"></div>
+                  </div>
+                </div>
+
+                <!-- Proteínas -->
+                @let sProtDiff = getGoalDifference(stickyTotals.proteina, getGoalMetric('proteinaG'), 'g');
+                <div class="sticky-metric-item">
+                  <span class="sticky-metric-lbl">
+                    <span class="dot-8 dot-prot"></span>
+                    <span>Prot.</span>
+                  </span>
+                  <span class="sticky-metric-val"><strong>{{ formatGrams(stickyTotals.proteina) }}</strong> / {{ formatGrams(getGoalMetric('proteinaG')) }}g</span>
+                  <div class="sticky-prog-track">
+                    <div class="sticky-prog-fill bar-prot" [style.width.%]="sProtDiff.pct"></div>
+                  </div>
+                </div>
+
+                <!-- Carboidratos -->
+                @let sCarbDiff = getGoalDifference(stickyTotals.carbo, getGoalMetric('carboidratoG'), 'g');
+                <div class="sticky-metric-item">
+                  <span class="sticky-metric-lbl">
+                    <span class="dot-8 dot-carb"></span>
+                    <span>Carb.</span>
+                  </span>
+                  <span class="sticky-metric-val"><strong>{{ formatGrams(stickyTotals.carbo) }}</strong> / {{ formatGrams(getGoalMetric('carboidratoG')) }}g</span>
+                  <div class="sticky-prog-track">
+                    <div class="sticky-prog-fill bar-carb" [style.width.%]="sCarbDiff.pct"></div>
+                  </div>
+                </div>
+
+                <!-- Gorduras -->
+                @let sFatDiff = getGoalDifference(stickyTotals.gordura, getGoalMetric('gorduraG'), 'g');
+                <div class="sticky-metric-item">
+                  <span class="sticky-metric-lbl">
+                    <span class="dot-8 dot-fat"></span>
+                    <span>Gord.</span>
+                  </span>
+                  <span class="sticky-metric-val"><strong>{{ formatGrams(stickyTotals.gordura) }}</strong> / {{ formatGrams(getGoalMetric('gorduraG')) }}g</span>
+                  <div class="sticky-prog-track">
+                    <div class="sticky-prog-fill bar-fat" [style.width.%]="sFatDiff.pct"></div>
+                  </div>
+                </div>
+
+                <!-- Fibras -->
+                @let sFibDiff = getGoalDifference(stickyTotals.fibras, getGoalMetric('fibrasG'), 'g');
+                <div class="sticky-metric-item">
+                  <span class="sticky-metric-lbl">
+                    <span class="dot-8 dot-fiber"></span>
+                    <span>Fibras</span>
+                  </span>
+                  <span class="sticky-metric-val"><strong>{{ formatGrams(stickyTotals.fibras) }}</strong> / {{ formatGrams(getGoalMetric('fibrasG')) }}g</span>
+                  <div class="sticky-prog-track">
+                    <div class="sticky-prog-fill bar-fiber" [style.width.%]="sFibDiff.pct"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- RESUMO COM METAS: Grid de 6 colunas, label 11px uppercase, valor 24px/600 (Calorias span 2 col, 32px), "de {meta}" 13px muted, barra 4px, "+X g" em var(--warning) / "faltam X g" em muted -->
+        @if (plannerService.dietTotals(); as totals) {
+          <div class="diet-summary-section" role="region" aria-label="Resumo nutricional com metas">
+            <div class="diet-summary-header">
+              <div class="diet-summary-title-group">
+                <h3 class="diet-summary-title">Balanço Nutricional Diário</h3>
+                <p class="diet-summary-subtitle">
+                  {{ totals.itensCount }} {{ totals.itensCount === 1 ? 'item cadastrado' : 'itens cadastrados' }} · 
+                  {{ (plannerService.planner()?.dieta?.length || 0) }} {{ (plannerService.planner()?.dieta?.length === 1) ? 'refeição' : 'refeições' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="diet-goals-grid">
+              <!-- 1. Calorias (Span 2 colunas, valor 32px) -->
+              @let calGoal = getGoalMetric('calorias');
+              @let calDiff = getGoalDifference(totals.calorias, calGoal, 'kcal');
+              <div class="diet-metric-card card-calorias">
+                <div class="metric-top-row">
+                  <span class="metric-lbl-11">Calorias</span>
+                  <span class="metric-diff-badge" [class.is-warning]="calDiff.isOver" [class.is-muted]="!calDiff.isOver">
+                    {{ calDiff.text }}
+                  </span>
+                </div>
+                <div class="metric-val-wrap font-tabular">
+                  <span class="metric-num-32">{{ formatKcal(totals.calorias) }}</span>
+                  <span class="metric-meta-13">de {{ formatKcal(calGoal) }} kcal</span>
+                </div>
+                <div class="metric-progress-track">
+                  <div class="metric-progress-bar bar-calorias" [style.width.%]="calDiff.pct"></div>
+                </div>
+              </div>
+
+              <!-- 2. Proteínas (1 coluna, valor 24px) -->
+              @let protGoal = getGoalMetric('proteinaG');
+              @let protDiff = getGoalDifference(totals.proteina, protGoal, 'g');
+              <div class="diet-metric-card">
+                <div class="metric-top-row">
+                  <span class="metric-lbl-11">
+                    <span class="dot-8 dot-prot"></span>
+                    <span>Proteínas</span>
+                  </span>
+                  <span class="metric-diff-badge" [class.is-warning]="protDiff.isOver" [class.is-muted]="!protDiff.isOver">
+                    {{ protDiff.text }}
+                  </span>
+                </div>
+                <div class="metric-val-wrap font-tabular">
+                  <span class="metric-num-24">{{ formatGrams(totals.proteina) }}</span>
+                  <span class="metric-meta-13">de {{ formatGrams(protGoal) }} g</span>
+                </div>
+                <div class="metric-progress-track">
+                  <div class="metric-progress-bar bar-prot" [style.width.%]="protDiff.pct"></div>
+                </div>
+              </div>
+
+              <!-- 3. Carboidratos (1 coluna, valor 24px) -->
+              @let carbGoal = getGoalMetric('carboidratoG');
+              @let carbDiff = getGoalDifference(totals.carbo, carbGoal, 'g');
+              <div class="diet-metric-card">
+                <div class="metric-top-row">
+                  <span class="metric-lbl-11">
+                    <span class="dot-8 dot-carb"></span>
+                    <span>Carboidratos</span>
+                  </span>
+                  <span class="metric-diff-badge" [class.is-warning]="carbDiff.isOver" [class.is-muted]="!carbDiff.isOver">
+                    {{ carbDiff.text }}
+                  </span>
+                </div>
+                <div class="metric-val-wrap font-tabular">
+                  <span class="metric-num-24">{{ formatGrams(totals.carbo) }}</span>
+                  <span class="metric-meta-13">de {{ formatGrams(carbGoal) }} g</span>
+                </div>
+                <div class="metric-progress-track">
+                  <div class="metric-progress-bar bar-carb" [style.width.%]="carbDiff.pct"></div>
+                </div>
+              </div>
+
+              <!-- 4. Gorduras (1 coluna, valor 24px) -->
+              @let fatGoal = getGoalMetric('gorduraG');
+              @let fatDiff = getGoalDifference(totals.gordura, fatGoal, 'g');
+              <div class="diet-metric-card">
+                <div class="metric-top-row">
+                  <span class="metric-lbl-11">
+                    <span class="dot-8 dot-fat"></span>
+                    <span>Gorduras</span>
+                  </span>
+                  <span class="metric-diff-badge" [class.is-warning]="fatDiff.isOver" [class.is-muted]="!fatDiff.isOver">
+                    {{ fatDiff.text }}
+                  </span>
+                </div>
+                <div class="metric-val-wrap font-tabular">
+                  <span class="metric-num-24">{{ formatGrams(totals.gordura) }}</span>
+                  <span class="metric-meta-13">de {{ formatGrams(fatGoal) }} g</span>
+                </div>
+                <div class="metric-progress-track">
+                  <div class="metric-progress-bar bar-fat" [style.width.%]="fatDiff.pct"></div>
+                </div>
+              </div>
+
+              <!-- 5. Fibras (1 coluna, valor 24px) -->
+              @let fibGoal = getGoalMetric('fibrasG');
+              @let fibDiff = getGoalDifference(totals.fibras, fibGoal, 'g');
+              <div class="diet-metric-card">
+                <div class="metric-top-row">
+                  <span class="metric-lbl-11">
+                    <span class="dot-8 dot-fiber"></span>
+                    <span>Fibras</span>
+                  </span>
+                  <span class="metric-diff-badge" [class.is-warning]="fibDiff.isOver" [class.is-muted]="!fibDiff.isOver">
+                    {{ fibDiff.text }}
+                  </span>
+                </div>
+                <div class="metric-val-wrap font-tabular">
+                  <span class="metric-num-24">{{ formatGrams(totals.fibras) }}</span>
+                  <span class="metric-meta-13">de {{ formatGrams(fibGoal) }} g</span>
+                </div>
+                <div class="metric-progress-track">
+                  <div class="metric-progress-bar bar-fiber" [style.width.%]="fibDiff.pct"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Cabeçalho das Refeições do Dia -->
+        <div class="meals-header-row">
+          <div class="meals-header-titles">
+            <div class="tab-title-row">
+              <mat-icon class="tab-title-icon text-diet">restaurant</mat-icon>
+              <h3 class="card-title">Refeições do Dia</h3>
+            </div>
+            <p class="card-desc-compact">Gerencie o cardápio, organize horários e acompanhe o balanço de macronutrientes por refeição.</p>
+          </div>
+
+          <div class="meals-header-actions-wrap">
+            <button 
+              type="button" 
+              class="btn-secondary-action btn-collapse-all" 
+              (click)="toggleCollapseAllMeals()"
+              [title]="allMealsCollapsed() ? 'Expandir todas as refeições' : 'Recolher todas as refeições'">
+              <mat-icon>{{ allMealsCollapsed() ? 'unfold_more' : 'unfold_less' }}</mat-icon>
+              <span>{{ allMealsCollapsed() ? 'Expandir tudo' : 'Recolher tudo' }}</span>
+            </button>
+
+            <button 
+              type="button" 
+              class="btn-secondary-action btn-open-custom-modal" 
+              (click)="openCustomFoodModal()"
+              title="Criar alimento personalizado ou buscar na Tabela TACO">
+              <mat-icon>playlist_add</mat-icon>
+              <span>Criar alimento personalizado</span>
+            </button>
+
+            <!-- Botão com um único "+" -->
+            <button 
+              type="button" 
+              class="btn-primary-action btn-add-meal-top" 
+              (click)="plannerService.addMeal('Nova Refeição', '15:00')" 
+              aria-label="Adicionar refeição">
+              <mat-icon>add</mat-icon>
+              <span>Adicionar Refeição</span>
+            </button>
+          </div>
+        </div>
+
+        @if (plannerService.planner(); as pl) {
+          <div class="meals-accordion-list">
+            @for (meal of pl.dieta; track meal.id; let mIdx = $index) {
+              <div 
+                class="meal-card" 
+                [class.is-collapsed]="isMealCollapsed(meal.id)"
+                [attr.aria-label]="meal.nome">
+                
+                <!-- Cabeçalho da refeição: nome e horário como ghost inputs, chips eliminados, menu ⋯ -->
+                <div class="meal-header-row">
+                  <div class="meal-header-left">
+                    <button 
+                      type="button" 
+                      class="btn-meal-collapse" 
+                      (click)="toggleMealCollapse(meal.id)" 
+                      [attr.aria-expanded]="!isMealCollapsed(meal.id)"
+                      title="Recolher / Expandir refeição">
+                      <mat-icon class="chevron-icon" [class.rotated]="isMealCollapsed(meal.id)">expand_more</mat-icon>
+                    </button>
+
+                    <div class="meal-drag-handle-wrap" title="Reordenar refeição">
+                      <mat-icon class="meal-drag-icon">drag_indicator</mat-icon>
+                      <div class="meal-reorder-buttons">
+                        <button 
+                          type="button" 
+                          class="btn-micro-reorder" 
+                          [disabled]="mIdx === 0"
+                          (click)="moveMeal(meal.id, 'up', $event)" 
+                          title="Mover refeição para cima">
+                          <mat-icon>arrow_drop_up</mat-icon>
+                        </button>
+                        <button 
+                          type="button" 
+                          class="btn-micro-reorder" 
+                          [disabled]="mIdx === pl.dieta.length - 1"
+                          (click)="moveMeal(meal.id, 'down', $event)" 
+                          title="Mover refeição para baixo">
+                          <mat-icon>arrow_drop_down</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Ghost inputs para nome e horário -->
+                    <div class="meal-ghost-name-wrap">
+                      <input 
+                        type="text" 
+                        class="meal-ghost-input meal-ghost-name" 
+                        [value]="meal.nome" 
+                        [title]="meal.nome"
+                        aria-label="Nome da refeição"
+                        (change)="meal.nome = $any($event.target).value" />
+                    </div>
+
+                    <div class="meal-ghost-time-wrap">
+                      <input 
+                        type="time" 
+                        class="meal-ghost-input meal-ghost-time font-tabular" 
+                        [value]="meal.horario || '12:00'" 
+                        aria-label="Horário da refeição"
+                        (change)="meal.horario = $any($event.target).value" />
+                    </div>
+                  </div>
+
+                  <div class="meal-header-right">
+                    <!-- Totais da refeição sem chips com borda: "385 kcal" 16px/600 + "● P 30,3 g ● C 25,5 g ● G 18,4 g" 13px -->
+                    @let mealTot = plannerService.getMealTotals(meal);
+                    <div class="meal-plain-totals font-tabular">
+                      <span class="meal-kcal-strong">{{ formatKcal(mealTot.calorias) }} kcal</span>
+                      <span class="meal-macros-inline">
+                        <span class="dot-8 dot-prot"></span>
+                        <span class="macro-txt">P {{ formatGrams(mealTot.proteinaG) }} g</span>
+                        <span class="dot-8 dot-carb"></span>
+                        <span class="macro-txt">C {{ formatGrams(mealTot.carboidratoG) }} g</span>
+                        <span class="dot-8 dot-fat"></span>
+                        <span class="macro-txt">G {{ formatGrams(mealTot.gorduraG) }} g</span>
+                      </span>
+                    </div>
+
+                    <!-- Menu ⋯ (Duplicar, Excluir) -->
+                    <div class="dropdown-wrapper meal-more-dropdown-wrap">
+                      <button 
+                        type="button" 
+                        class="btn-meal-more" 
+                        (click)="toggleMealMenu(meal.id, $event)"
+                        [class.active]="openMealMenuId() === meal.id"
+                        title="Mais opções da refeição"
+                        aria-label="Mais opções">
+                        <mat-icon>more_horiz</mat-icon>
+                      </button>
+
+                      @if (openMealMenuId() === meal.id) {
+                        <div class="meal-context-dropdown-menu" (click)="$event.stopPropagation()">
+                          <button type="button" class="dropdown-item" (click)="duplicateMeal(meal.id)">
+                            <mat-icon>content_copy</mat-icon>
+                            <span>Duplicar refeição</span>
+                          </button>
+                          <div class="dropdown-menu-divider"></div>
+                          <button type="button" class="dropdown-item item-danger" (click)="deleteMealWithUndo(meal.id)">
+                            <mat-icon>delete_outline</mat-icon>
+                            <span>Excluir refeição</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Conteúdo expandido (tabela e botão + Adicionar alimento) -->
+                @if (!isMealCollapsed(meal.id)) {
+                  <div class="meal-body-content">
+                    <!-- Tabela com grid exato: 20px minmax(200px,1fr) repeat(5,72px) 40px -->
+                    <div class="food-grid-table" role="table" [attr.aria-label]="'Alimentos de ' + meal.nome">
+                      <!-- Header sem fundo -->
+                      <div class="food-grid-header" role="row">
+                        <div class="col-head col-idx" role="columnheader">#</div>
+                        <div class="col-head col-name text-left" role="columnheader">Alimento</div>
+                        <div class="col-head col-metric text-right" role="columnheader">Qtd</div>
+                        <div class="col-head col-metric text-right" role="columnheader">Kcal</div>
+                        <div class="col-head col-metric text-right" role="columnheader">Prot.</div>
+                        <div class="col-head col-metric text-right" role="columnheader">Carb.</div>
+                        <div class="col-head col-metric text-right" role="columnheader">Gord.</div>
+                        <div class="col-head col-actions text-center" role="columnheader">
+                          <span class="sr-only">Ações</span>
+                        </div>
+                      </div>
+
+                      <!-- Linhas de alimentos -->
+                      @if (meal.alimentos.length === 0) {
+                        <div class="food-grid-empty" role="row">
+                          <p class="empty-meal-text">Nenhum alimento adicionado nesta refeição. Clique na linha abaixo para buscar e adicionar.</p>
+                        </div>
+                      } @else {
+                        @for (food of meal.alimentos; track food.id; let fIdx = $index) {
+                          <div 
+                            class="food-grid-row" 
+                            role="row"
+                            [class.flash-added-soft]="flashedFoodId() === food.id">
+                            <div class="col-cell col-idx text-center font-tabular text-muted" role="cell">{{ fIdx + 1 }}</div>
+                            
+                            <div class="col-cell col-name text-left" role="cell">
+                              <span class="food-name-display" [title]="food.nome">{{ food.nome }}</span>
+                            </div>
+
+                            <!-- Qtd como ghost input numérico com recálculo imediato -->
+                            <div class="col-cell col-metric text-right" role="cell">
+                              <div class="ghost-qtd-wrap">
+                                <input 
+                                  type="number" 
+                                  min="1" 
+                                  step="1"
+                                  class="ghost-qtd-input font-tabular text-right" 
+                                  [value]="food.quantidadeG" 
+                                  aria-label="Quantidade em gramas"
+                                  (input)="onUpdateFoodGrams(meal.id, food.id, $any($event.target).value)"
+                                  (change)="onUpdateFoodGrams(meal.id, food.id, $any($event.target).value)" />
+                                <span class="ghost-qtd-unit">g</span>
+                              </div>
+                            </div>
+
+                            <div class="col-cell col-metric text-right font-tabular font-bold" role="cell">
+                              {{ formatKcal(food.calorias) }}
+                            </div>
+
+                            <div class="col-cell col-metric text-right font-tabular" role="cell">
+                              {{ formatGrams(food.proteinaG) }}
+                            </div>
+
+                            <div class="col-cell col-metric text-right font-tabular" role="cell">
+                              {{ formatGrams(food.carboidratoG) }}
+                            </div>
+
+                            <div class="col-cell col-metric text-right font-tabular" role="cell">
+                              {{ formatGrams(food.gorduraG) }}
+                            </div>
+
+                            <!-- Botão 32x32 com lixeira 16px visível no hover -->
+                            <div class="col-cell col-actions text-center" role="cell">
+                              <button 
+                                type="button" 
+                                class="btn-row-del-food" 
+                                (click)="removeFoodWithUndo(meal.id, food, fIdx)"
+                                [title]="'Remover ' + food.nome"
+                                [attr.aria-label]="'Remover ' + food.nome">
+                                <mat-icon class="icon-16">delete_outline</mat-icon>
+                              </button>
+                            </div>
+                          </div>
+                        }
+
+                        <!-- Linha de TOTAL alinhada às colunas -->
+                        <div class="food-grid-row food-grid-total-row" role="row">
+                          <div class="col-cell col-idx" role="cell"></div>
+                          <div class="col-cell col-name text-left font-bold" role="cell">Total da Refeição</div>
+                          <div class="col-cell col-metric text-right font-tabular text-muted" role="cell">—</div>
+                          <div class="col-cell col-metric text-right font-tabular font-bold" role="cell">{{ formatKcal(mealTot.calorias) }}</div>
+                          <div class="col-cell col-metric text-right font-tabular font-bold" role="cell">{{ formatGrams(mealTot.proteinaG) }}</div>
+                          <div class="col-cell col-metric text-right font-tabular font-bold" role="cell">{{ formatGrams(mealTot.carboidratoG) }}</div>
+                          <div class="col-cell col-metric text-right font-tabular font-bold" role="cell">{{ formatGrams(mealTot.gorduraG) }}</div>
+                          <div class="col-cell col-actions" role="cell"></div>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Linha + Adicionar alimento (height: 44px; dashed) -->
+                    <div class="add-food-line-container">
+                      <button 
+                        type="button" 
+                        class="btn-add-food-dashed-line" 
+                        (click)="openQuickAddForMeal(meal.id)"
+                        [attr.aria-expanded]="activeQuickAddMealId() === meal.id"
+                        title="Adicionar alimento nesta refeição">
+                        <mat-icon>add</mat-icon>
+                        <span>Adicionar alimento</span>
+                      </button>
+
+                      <!-- Popover contextual vinculado à refeição -->
+                      @if (activeQuickAddMealId() === meal.id) {
+                        <div class="meal-quick-add-popover" role="region" aria-label="Buscar e adicionar alimento">
+                          <div class="popover-header">
+                            <div class="popover-search-wrap">
+                              <mat-icon class="popover-search-icon">search</mat-icon>
+                              <input 
+                                type="text" 
+                                class="popover-search-field" 
+                                placeholder="Buscar na Tabela TACO (ex: arroz, frango, ovo, aveia...)" 
+                                [value]="quickAddQuery()" 
+                                (input)="onQuickAddSearch($any($event.target).value)"
+                                (keydown.enter)="confirmQuickAddFood()"
+                                autofocus
+                                autocomplete="off" />
+                              @if (quickAddQuery()) {
+                                <button type="button" class="btn-clear-quick-query" (click)="onQuickAddSearch('')" title="Limpar busca">
+                                  <mat-icon>close</mat-icon>
+                                </button>
+                              }
+                            </div>
+                            <button type="button" class="btn-close-popover-x" (click)="closeQuickAdd()" title="Fechar (Esc)" aria-label="Fechar popover">
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          </div>
+
+                          <!-- Recentes e favoritos desta refeição: máx. 3, sem borda, max-width 220px com ellipsis e title -->
+                          <div class="popover-favorites-bar">
+                            <span class="fav-label-small">Recentes e favoritos desta refeição:</span>
+                            <div class="fav-chips-list">
+                              @for (fav of dietQuickFavorites.slice(0, 3); track fav.nome) {
+                                <button 
+                                  type="button" 
+                                  class="fav-chip-noborder" 
+                                  [title]="fav.nome + ' (' + fav.quantidadeG + 'g)'"
+                                  (click)="selectQuickAddFavorite(fav)">
+                                  <span class="fav-chip-ellipsis">+ {{ fav.nome }} ({{ fav.quantidadeG }}g)</span>
+                                </button>
+                              }
+                            </div>
+                          </div>
+
+                          <!-- Lista de Resultados da Busca TACO com kcal/100g e P/C/G -->
+                          @if (quickAddResults().length > 0) {
+                            <div class="popover-taco-results" role="listbox">
+                              @for (item of quickAddResults(); track item.id) {
+                                <button 
+                                  type="button" 
+                                  class="popover-result-item" 
+                                  [class.is-selected]="quickAddSelectedFood()?.id === item.id"
+                                  (click)="selectQuickAddFood(item)">
+                                  <div class="result-text-col">
+                                    <span class="result-food-name" [title]="item.nome">{{ item.nome }}</span>
+                                    <span class="result-food-cat">{{ item.categoria }}</span>
+                                  </div>
+                                  <div class="result-macros-pill font-tabular">
+                                    <span class="result-kcal-val"><strong>{{ formatKcal(item.calorias100g) }}</strong> kcal/100g</span>
+                                    <span class="result-macro-detail">P {{ formatGrams(item.proteina100g) }}g · C {{ formatGrams(item.carboidrato100g) }}g · G {{ formatGrams(item.gordura100g) }}g</span>
+                                  </div>
+                                </button>
+                              }
+                            </div>
+                          }
+
+                          <!-- Pré-visualização ao vivo da quantidade e macronutrientes calculados -->
+                          @if (quickAddSelectedFood(); as selFood) {
+                            <div class="popover-live-preview-bar">
+                              <div class="preview-inputs-wrap">
+                                <label for="popoverGramsInput" class="preview-qtd-label">Qtd (g):</label>
+                                <input 
+                                  id="popoverGramsInput"
+                                  type="number" 
+                                  min="1" 
+                                  step="1"
+                                  class="preview-qtd-input font-tabular text-right" 
+                                  [value]="quickAddGrams()" 
+                                  (input)="onQuickAddGramsChange($any($event.target).value)"
+                                  (keydown.enter)="confirmQuickAddFood()" />
+                                
+                                <div class="preview-macros-readout font-tabular">
+                                  <span class="prev-kcal"><strong>{{ formatKcal(quickAddNutrients().calorias) }}</strong> kcal</span>
+                                  <span class="dot-8 dot-prot"></span>
+                                  <span class="prev-macro">P {{ formatGrams(quickAddNutrients().proteinaG) }}g</span>
+                                  <span class="dot-8 dot-carb"></span>
+                                  <span class="prev-macro">C {{ formatGrams(quickAddNutrients().carboidratoG) }}g</span>
+                                  <span class="dot-8 dot-fat"></span>
+                                  <span class="prev-macro">G {{ formatGrams(quickAddNutrients().gorduraG) }}g</span>
+                                </div>
+                              </div>
+
+                              <div class="preview-actions-wrap">
+                                <button 
+                                  type="button" 
+                                  class="btn-popover-cancel-subtle" 
+                                  (click)="closeQuickAdd()">
+                                  Cancelar
+                                </button>
+                                <button 
+                                  type="button" 
+                                  class="btn-popover-confirm-primary" 
+                                  (click)="confirmQuickAddFood()"
+                                  title="Inserir alimento (Enter)">
+                                  <mat-icon>check</mat-icon>
+                                  <span>Inserir (Enter)</span>
+                                </button>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Card tracejado "+ Adicionar refeição" ao fim da lista -->
+            <button 
+              type="button" 
+              class="btn-add-meal-bottom-dashed" 
+              (click)="plannerService.addMeal('Nova Refeição', '15:00')"
+              title="Adicionar nova refeição ao cardápio">
+              <mat-icon>add</mat-icon>
+              <span>Adicionar refeição</span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Modal: Criar alimento personalizado (Tabela TACO | Personalizado) -->
+    @if (showCustomFoodModal()) {
+      <div class="modal-backdrop" (click)="closeCustomFoodModal()" (keydown.escape)="closeCustomFoodModal()">
+        <div class="custom-food-modal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="customFoodModalTitle">
+          <div class="modal-header">
+            <div>
+              <h3 id="customFoodModalTitle" class="modal-title">Criar alimento personalizado</h3>
+              <p class="modal-subtitle">Cadastre um alimento usando a Tabela TACO ou informe valores manuais</p>
+            </div>
+            <button type="button" class="btn-modal-close" (click)="closeCustomFoodModal()" aria-label="Fechar modal">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <!-- Segmented Control: Tabela TACO | Personalizado (height: 32px) -->
+          <div class="segmented-control-wrap" role="tablist">
+            <button 
+              type="button" 
+              class="segmented-btn" 
+              [class.active]="customFoodMode() === 'taco'"
+              (click)="setCustomFoodMode('taco')"
+              role="tab"
+              [attr.aria-selected]="customFoodMode() === 'taco'">
+              Tabela TACO
+            </button>
+            <button 
+              type="button" 
+              class="segmented-btn" 
+              [class.active]="customFoodMode() === 'manual'"
+              (click)="setCustomFoodMode('manual')"
+              role="tab"
+              [attr.aria-selected]="customFoodMode() === 'manual'">
+              Personalizado
+            </button>
+          </div>
+
+          <form [formGroup]="newFoodForm" (ngSubmit)="onAddCustomFood()" class="custom-modal-form">
+            <!-- Grid de 12 colunas com gap 16px -->
+            <div class="grid-12 gap-16">
+              
+              <!-- Refeição Destino (col-12) -->
+              <div class="col-12 form-field-block">
+                <label for="modalSelectMeal">Refeição Destino</label>
+                <div class="select-container-custom">
+                  <select id="modalSelectMeal" class="custom-control-input" formControlName="selectedMealId">
+                    @if (plannerService.planner(); as pl) {
+                      @for (m of pl.dieta; track m.id) {
+                        <option [value]="m.id">{{ m.nome }} ({{ m.horario || '--:--' }})</option>
+                      }
+                    }
+                  </select>
+                  <mat-icon class="select-chevron-muted">expand_more</mat-icon>
+                </div>
+              </div>
+
+              <!-- Nome do Alimento (col-8) -->
+              <div class="col-8 form-field-block input-relative">
+                <label for="modalFoodName">Nome do Alimento</label>
+                <input 
+                  id="modalFoodName" 
+                  type="text" 
+                  class="custom-control-input" 
+                  placeholder="Ex: Peito de frango, Arroz branco, Whey..."
+                  formControlName="nome"
+                  autocomplete="off"
+                  (input)="onFoodNameInput($any($event.target).value)"
+                  (focus)="onFoodNameInput(newFoodForm.value.nome || '')"
+                  (blur)="closeTacoDropdown()" />
+
+                @if (showTacoDropdown() && tacoSearchResults().length > 0 && customFoodMode() === 'taco') {
+                  <div class="taco-modal-dropdown" (mousedown)="$event.preventDefault()" role="listbox">
+                    @for (item of tacoSearchResults(); track item.id) {
+                      <button type="button" class="taco-dropdown-item" (click)="selectTacoFood(item)">
+                        <div class="item-text">
+                          <span class="item-title">{{ item.nome }}</span>
+                          <span class="item-sub">{{ item.categoria }}</span>
+                        </div>
+                        <span class="item-kcal">{{ formatKcal(item.calorias100g) }} kcal/100g</span>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Quantidade em Gramas (col-4) -->
+              <div class="col-4 form-field-block">
+                <label for="modalFoodQtd">Qtd (g)</label>
+                <div class="input-suffix-box">
+                  <input 
+                    id="modalFoodQtd" 
+                    type="number" 
+                    min="1"
+                    class="custom-control-input font-tabular text-right" 
+                    formControlName="quantidadeG"
+                    (input)="onFoodGramsChange($any($event.target).value)" />
+                  <span class="field-suffix">g</span>
+                </div>
+              </div>
+
+              <!-- Calorias (col-3) -->
+              <div class="col-3 form-field-block">
+                <label for="modalFoodKcal">Calorias</label>
+                <div class="input-suffix-box">
+                  <input 
+                    id="modalFoodKcal" 
+                    type="number" 
+                    class="custom-control-input font-tabular text-right"
+                    [class.read-only-taco]="customFoodMode() === 'taco'"
+                    [readonly]="customFoodMode() === 'taco'"
+                    placeholder="—"
+                    formControlName="calorias" />
+                  <span class="field-suffix">kcal</span>
+                </div>
+              </div>
+
+              <!-- Proteína (col-3) -->
+              <div class="col-3 form-field-block">
+                <label for="modalFoodProt">
+                  <span class="dot-8 dot-prot"></span>
+                  <span>Proteína</span>
+                </label>
+                <div class="input-suffix-box">
+                  <input 
+                    id="modalFoodProt" 
+                    type="number" 
+                    step="0.1"
+                    class="custom-control-input font-tabular text-right"
+                    [class.read-only-taco]="customFoodMode() === 'taco'"
+                    [readonly]="customFoodMode() === 'taco'"
+                    placeholder="—"
+                    formControlName="proteinaG" />
+                  <span class="field-suffix">g</span>
+                </div>
+              </div>
+
+              <!-- Carboidrato (col-3) -->
+              <div class="col-3 form-field-block">
+                <label for="modalFoodCarb">
+                  <span class="dot-8 dot-carb"></span>
+                  <span>Carboidrato</span>
+                </label>
+                <div class="input-suffix-box">
+                  <input 
+                    id="modalFoodCarb" 
+                    type="number" 
+                    step="0.1"
+                    class="custom-control-input font-tabular text-right"
+                    [class.read-only-taco]="customFoodMode() === 'taco'"
+                    [readonly]="customFoodMode() === 'taco'"
+                    placeholder="—"
+                    formControlName="carboidratoG" />
+                  <span class="field-suffix">g</span>
+                </div>
+              </div>
+
+              <!-- Gordura (col-3) -->
+              <div class="col-3 form-field-block">
+                <label for="modalFoodFat">
+                  <span class="dot-8 dot-fat"></span>
+                  <span>Gordura</span>
+                </label>
+                <div class="input-suffix-box">
+                  <input 
+                    id="modalFoodFat" 
+                    type="number" 
+                    step="0.1"
+                    class="custom-control-input font-tabular text-right"
+                    [class.read-only-taco]="customFoodMode() === 'taco'"
+                    [readonly]="customFoodMode() === 'taco'"
+                    placeholder="—"
+                    formControlName="gorduraG" />
+                  <span class="field-suffix">g</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer-actions">
+              <button type="button" class="btn-modal-cancel" (click)="closeCustomFoodModal()">
+                Cancelar
+              </button>
+
+              <button 
+                type="submit" 
+                class="btn-modal-submit" 
+                [disabled]="newFoodForm.invalid"
+                [title]="newFoodForm.invalid ? 'Preencha o nome, refeição e valores válidos para inserir' : 'Inserir alimento na refeição'">
+                <mat-icon>add</mat-icon>
+                <span>Inserir Alimento</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- ============================================================== -->
+    <!-- ABA 4: FICHA RESUMO CONSOLIDADA (EXPORTAR / COPIAR)           -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- ABA 4: FICHA RESUMO CONSOLIDADA (EXPORTAR / IMPRIMIR / COPIAR)-->
+    <!-- ============================================================== -->
+    @if (plannerService.activeSection() === 'resumo') {
+      <div 
+        class="section-container summary-tab-container"
+        [class.print-filter-treino]="printDocumentTarget() === 'treino'"
+        [class.print-filter-alimentacao]="printDocumentTarget() === 'alimentacao'">
+        <!-- Cabeçalho Exclusivo para Impressão A4 (@media print) -->
+        @if (plannerService.planner(); as pl) {
+          <div class="print-doc-header" aria-hidden="true">
+            <div class="print-header-top">
+              <div class="print-logo-box">
+                <span class="print-title">MACRIO</span>
+                <span class="print-subtitle">
+                  @if (printDocumentTarget() === 'treino') {
+                    Plano de treino
+                  } @else if (printDocumentTarget() === 'alimentacao') {
+                    Plano de alimentação
+                  } @else {
+                    Plano de treino e alimentação
+                  }
+                </span>
+              </div>
+              <div class="print-meta-box">
+                @if (alunoNome) {
+                  <span class="print-meta-item"><strong>Aluno:</strong> {{ alunoNome }}</span>
+                }
+                <span class="print-meta-item"><strong>Data:</strong> {{ currentDateShortFormatted }}</span>
+                @if (profissionalNome) {
+                  <span class="print-meta-item"><strong>Profissional:</strong> {{ profissionalNome }}</span>
+                }
+              </div>
+            </div>
+            <div class="print-rule"></div>
+          </div>
+        }
+
+        <!-- 1. Barra de Introdução: Frase de Apoio + Segmented Control Simples / Completa -->
+        <div class="summary-intro-row">
+          <p class="summary-lead-text">
+            Planejamento para leitura diária, impressão em folha A4 e exportação em PDF independente.
+          </p>
+
+          <div class="version-segmented-control" role="radiogroup" aria-label="Versão da Ficha">
+            <button 
+              type="button" 
+              class="version-btn"
+              [class.active]="exportMode() === 'simples'"
+              (click)="exportMode.set('simples')"
+              role="radio"
+              [attr.aria-checked]="exportMode() === 'simples'"
+              title="Versão simples recomendada para o dia a dia">
+              Simples
+            </button>
+            <button 
+              type="button" 
+              class="version-btn"
+              [class.active]="exportMode() === 'completa'"
+              (click)="exportMode.set('completa')"
+              role="radio"
+              [attr.aria-checked]="exportMode() === 'completa'"
+              title="Versão completa com detalhes técnicos e macros">
+              Completa
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Hub de Exportação Independente: Treino e Alimentação -->
+        <div class="summary-exports-hub" role="region" aria-label="Painel de exportações independentes de treino e alimentação">
+          <!-- Card de Treino -->
+          <div class="export-hub-panel workout-hub-panel">
+            <div class="hub-panel-header">
+              <span class="hub-tag">EXPORTAÇÃO DE TREINO</span>
+              <h3 class="hub-title">Plano de Treino</h3>
+              <p class="hub-desc">Ficha completa de exercícios, séries e dicas biomecânicas (sem dados de dieta ou macros).</p>
+            </div>
+
+            <div class="hub-panel-actions">
+              <button 
+                type="button" 
+                class="btn-primary-action btn-export-hub-pdf" 
+                (click)="downloadWorkoutPdf()"
+                [disabled]="!hasWorkoutPlan() || isDownloadingWorkoutPdf()"
+                [attr.aria-busy]="isDownloadingWorkoutPdf()"
+                [title]="!hasWorkoutPlan() ? 'Adicione exercícios para exportar o treino' : 'Baixar plano de treino em PDF (' + (exportMode() === 'simples' ? 'Simples' : 'Completa') + ')'"
+                aria-label="Baixar plano de treino em PDF">
+                @if (isDownloadingWorkoutPdf()) {
+                  <mat-icon class="spin-icon">sync</mat-icon>
+                  <span>Gerando PDF…</span>
+                } @else {
+                  <mat-icon>fitness_center</mat-icon>
+                  <span>Baixar treino (PDF)</span>
+                }
+              </button>
+
+              <div class="hub-secondary-actions">
+                <button 
+                  type="button" 
+                  class="btn-secondary-action btn-hub-sec"
+                  [disabled]="!hasWorkoutPlan()"
+                  (click)="sharePlan('treino')"
+                  title="Compartilhar plano de treino"
+                  aria-label="Compartilhar plano de treino">
+                  <mat-icon>share</mat-icon>
+                  <span>Compartilhar</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  class="btn-secondary-action btn-hub-sec"
+                  [disabled]="!hasWorkoutPlan()"
+                  (click)="printPlan('treino')"
+                  title="Imprimir plano de treino"
+                  aria-label="Imprimir plano de treino">
+                  <mat-icon>print</mat-icon>
+                  <span>Imprimir</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card de Alimentação -->
+          <div class="export-hub-panel diet-hub-panel">
+            <div class="hub-panel-header">
+              <span class="hub-tag">EXPORTAÇÃO DE ALIMENTAÇÃO</span>
+              <h3 class="hub-title">Plano de Alimentação</h3>
+              <p class="hub-desc">Cardápio do dia, horários, macros e água (sem exercícios ou séries de treino).</p>
+            </div>
+
+            <div class="hub-panel-actions">
+              <button 
+                type="button" 
+                class="btn-primary-action btn-export-hub-pdf" 
+                (click)="downloadDietPdf()"
+                [disabled]="!hasDietPlan() || isDownloadingDietPdf()"
+                [attr.aria-busy]="isDownloadingDietPdf()"
+                [title]="!hasDietPlan() ? 'Adicione refeições para exportar a alimentação' : 'Baixar plano de alimentação em PDF (' + (exportMode() === 'simples' ? 'Simples' : 'Completa') + ')'"
+                aria-label="Baixar plano de alimentação em PDF">
+                @if (isDownloadingDietPdf()) {
+                  <mat-icon class="spin-icon">sync</mat-icon>
+                  <span>Gerando PDF…</span>
+                } @else {
+                  <mat-icon>restaurant</mat-icon>
+                  <span>Baixar alimentação (PDF)</span>
+                }
+              </button>
+
+              <div class="hub-secondary-actions">
+                <button 
+                  type="button" 
+                  class="btn-secondary-action btn-hub-sec"
+                  [disabled]="!hasDietPlan()"
+                  (click)="sharePlan('alimentacao')"
+                  title="Compartilhar plano de alimentação"
+                  aria-label="Compartilhar plano de alimentação">
+                  <mat-icon>share</mat-icon>
+                  <span>Compartilhar</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  class="btn-secondary-action btn-hub-sec"
+                  [disabled]="!hasDietPlan()"
+                  (click)="printPlan('alimentacao')"
+                  title="Imprimir plano de alimentação"
+                  aria-label="Imprimir plano de alimentação">
+                  <mat-icon>print</mat-icon>
+                  <span>Imprimir</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (plannerService.planner(); as pl) {
+          <div class="summary-content-stack">
+            <!-- 3. Banner Resumo Geral -->
+            <div class="plan-summary-banner" aria-label="Seu plano em resumo">
+              <span class="summary-banner-badge">SEU PLANO EM RESUMO</span>
+              <div class="summary-banner-content font-tabular">
+                <span>{{ pl.treinos.length }} {{ pl.treinos.length === 1 ? 'treino' : 'treinos' }}</span>
+                @if (workoutLettersSummary) {
+                  <span class="workout-letters">({{ workoutLettersSummary }})</span>
+                }
+                <span class="banner-sep">·</span>
+                <span>{{ pl.dieta.length }} {{ pl.dieta.length === 1 ? 'refeição' : 'refeições' }} por dia</span>
+                <span class="banner-sep">·</span>
+                <span>{{ formatWaterLiters(pl.metasCustomizadas.metaAguaMl) }} de água por dia</span>
+              </div>
+            </div>
+
+            <!-- 4. Seção 1: Metas do Dia -->
+            <section class="summary-section-block metas-dia-section" aria-labelledby="heading-metas-resumo">
+              <div class="summary-section-header">
+                <h3 id="heading-metas-resumo" class="block-title">1. METAS DO DIA</h3>
+              </div>
+
+              <!-- Grid de 4 Cards com Números Grandes e Unidades Alinhadas -->
+              <div class="metas-dia-grid">
+                <!-- Calorias -->
+                <div class="meta-dia-card">
+                  <span class="meta-dia-label">CALORIAS</span>
+                  <div class="meta-dia-metric-wrap">
+                    <span class="meta-dia-num font-tabular">{{ formatKcal(pl.metasCustomizadas.calorias) }}</span>
+                    <span class="meta-dia-unit">kcal/dia</span>
+                  </div>
+                  <span class="meta-dia-sub">Meta calórica diária</span>
+                </div>
+
+                <!-- Proteínas -->
+                <div class="meta-dia-card">
+                  <span class="meta-dia-label">PROTEÍNAS</span>
+                  <div class="meta-dia-metric-wrap">
+                    <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.proteinaG) }}</span>
+                    <span class="meta-dia-unit">g</span>
+                  </div>
+                  <span class="meta-dia-sub font-tabular">{{ formatKcal(pl.metasCustomizadas.proteinaG * 4) }} kcal</span>
+                </div>
+
+                <!-- Carboidratos -->
+                <div class="meta-dia-card">
+                  <span class="meta-dia-label">CARBOIDRATOS</span>
+                  <div class="meta-dia-metric-wrap">
+                    <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.carboidratoG) }}</span>
+                    <span class="meta-dia-unit">g</span>
+                  </div>
+                  <span class="meta-dia-sub font-tabular">{{ formatKcal(pl.metasCustomizadas.carboidratoG * 4) }} kcal</span>
+                </div>
+
+                <!-- Gorduras -->
+                <div class="meta-dia-card">
+                  <span class="meta-dia-label">GORDURAS</span>
+                  <div class="meta-dia-metric-wrap">
+                    <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.gorduraG) }}</span>
+                    <span class="meta-dia-unit">g</span>
+                  </div>
+                  <span class="meta-dia-sub font-tabular">{{ formatKcal(pl.metasCustomizadas.gorduraG * 9) }} kcal</span>
+                </div>
+              </div>
+
+              <!-- Na Versão Completa: exibe detalhes técnicos metabólicos -->
+              @if (exportMode() === 'completa') {
+                <div class="metas-technical-row">
+                  <div class="technical-chip">
+                    <span class="chip-label">GET:</span>
+                    <strong class="font-tabular">{{ formatKcal(pl.metasCustomizadas.gastoEnergeticoTotal) }} kcal</strong>
+                  </div>
+                  <div class="technical-chip">
+                    <span class="chip-label">TMB:</span>
+                    <strong class="font-tabular">{{ formatKcal(pl.metasCustomizadas.taxaMetabolicaBasal) }} kcal</strong>
+                  </div>
+                  <div class="technical-chip">
+                    <span class="chip-label">Hidratação:</span>
+                    <strong class="font-tabular">{{ formatInt(pl.metasCustomizadas.metaAguaMl) }} mL/dia</strong>
+                  </div>
+                  <div class="technical-chip">
+                    <span class="chip-label">Proteínas:</span>
+                    <span class="font-tabular">{{ formatKcal(pl.metasCustomizadas.proteinaG * 4) }} kcal</span>
+                  </div>
+                  <div class="technical-chip">
+                    <span class="chip-label">Carboidratos:</span>
+                    <span class="font-tabular">{{ formatKcal(pl.metasCustomizadas.carboidratoG * 4) }} kcal</span>
+                  </div>
+                  <div class="technical-chip">
+                    <span class="chip-label">Gorduras:</span>
+                    <span class="font-tabular">{{ formatKcal(pl.metasCustomizadas.gorduraG * 9) }} kcal</span>
+                  </div>
+                  @if (pl.metasCustomizadas.fibrasG) {
+                    <div class="technical-chip">
+                      <span class="chip-label">Fibras:</span>
+                      <strong class="font-tabular">{{ formatInt(pl.metasCustomizadas.fibrasG) }} g</strong>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+
+            <!-- 5. Seção 2: Rotina de Treinos -->
+            <section class="summary-section-block summary-section-workout" aria-labelledby="heading-treinos-resumo">
+              <div class="summary-section-header">
+                <h3 id="heading-treinos-resumo" class="block-title">2. ROTINA DE TREINOS</h3>
+                <span class="section-count-badge font-tabular">{{ pl.treinos.length }} sessões cadastradas</span>
+              </div>
+
+              <!-- Legenda Única de 3 Linhas (Apenas na Versão Simples) -->
+              @if (exportMode() === 'simples') {
+                <div class="workout-legend-box" role="note" aria-label="Legenda explicativa de treino">
+                  <p class="legend-text">
+                    <strong>Série</strong> = um bloco de repetições. &nbsp;·&nbsp;
+                    <strong>Repetição</strong> = cada vez que você faz o movimento. &nbsp;·&nbsp;
+                    <strong>Descanso</strong> = pausa entre uma série e outra.
+                  </p>
+                </div>
+              }
+
+              <div class="workouts-summary-list">
+                @for (w of pl.treinos; track w.id; let wIdx = $index) {
+                  @let hInfo = getWorkoutHeader(w, wIdx);
+                  <article class="summary-workout-card" [attr.aria-label]="w.nome">
+                    <!-- Cabeçalho do Treino -->
+                    <div class="workout-summary-top">
+                      <div class="workout-title-group">
+                        <div class="workout-badge-row">
+                          <span class="workout-badge-tag">{{ hInfo.badge }}</span>
+                          <span class="workout-count-badge font-tabular">{{ w.exercicios.length }} exercícios</span>
+                        </div>
+                        <h4 class="workout-heading-title">{{ hInfo.subtitle }}</h4>
+
+                        @if (exportMode() === 'completa') {
+                          <p class="workout-focus-subtext">
+                            <strong>Foco:</strong> {{ w.foco }}
+                          </p>
+                          @if (w.observacoes) {
+                            <p class="workout-general-obs">
+                              <strong>Observações Gerais:</strong> {{ w.observacoes }}
+                            </p>
+                          }
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Versão Simples: 4 Colunas com Dica Indentada -->
+                    @if (exportMode() === 'simples') {
+                      <div class="summary-table-scroll-wrap">
+                        <table class="summary-table summary-exercise-table-simple" [attr.aria-label]="'Exercícios de ' + hInfo.badge">
+                          <colgroup>
+                            <col style="width: 44px" />
+                            <col />
+                            <col style="width: 80px" />
+                            <col style="width: 100px" />
+                            <col style="width: 90px" />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th scope="col" class="th-num text-center">#</th>
+                              <th scope="col" class="th-exercise-name text-left">Exercício</th>
+                              <th scope="col" class="th-sets text-right">Séries</th>
+                              <th scope="col" class="th-reps text-right">Repetições</th>
+                              <th scope="col" class="th-rest text-right">Descanso</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (ex of w.exercicios; track ex.id; let idx = $index) {
+                              <tr class="summary-row">
+                                <td class="td-num text-center font-tabular">{{ idx + 1 }}</td>
+                                <td class="td-exercise-name text-left">
+                                  <div class="exercise-name-primary">{{ ex.nome }}</div>
+                                  @if (ex.observacoes || ex.dicaBiomecanica) {
+                                    <div class="exercise-tip-text">
+                                      Dica: {{ ex.observacoes || ex.dicaBiomecanica }}
+                                    </div>
+                                  }
+                                </td>
+                                <td class="td-sets text-right font-tabular font-bold">{{ ex.series }}</td>
+                                <td class="td-reps text-right font-tabular font-bold">{{ formatRepsSimple(ex.repeticoes) }}</td>
+                                <td class="td-rest text-right font-tabular">{{ formatRestSimple(ex.descansoSegundos) }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    } @else {
+                      <!-- Versão Completa: 6 Colunas com Músculo e Observações -->
+                      <div class="summary-table-scroll-wrap">
+                        <table class="summary-table summary-exercise-table" [attr.aria-label]="'Exercícios do ' + w.nome">
+                          <colgroup>
+                            <col class="col-num" />
+                            <col class="col-exercise-name" />
+                            <col class="col-sets" />
+                            <col class="col-reps" />
+                            <col class="col-rest" />
+                            <col class="col-obs" />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th scope="col" class="th-num text-center">#</th>
+                              <th scope="col" class="th-exercise-name text-left">Exercício</th>
+                              <th scope="col" class="th-sets text-right">Séries</th>
+                              <th scope="col" class="th-reps text-right">Reps</th>
+                              <th scope="col" class="th-rest text-right">Descanso</th>
+                              <th scope="col" class="th-obs text-left">Observações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (ex of w.exercicios; track ex.id; let idx = $index) {
+                              <tr class="summary-row">
+                                <td class="td-num text-center font-tabular">{{ idx + 1 }}</td>
+                                <td class="td-exercise-name text-left">
+                                  <div class="exercise-name-primary">{{ ex.nome }}</div>
+                                  <div class="exercise-muscle-secondary">{{ ex.grupoMuscular }}</div>
+                                </td>
+                                <td class="td-sets text-right font-tabular font-bold">{{ ex.series }}</td>
+                                <td class="td-reps text-right font-tabular">{{ formatReps(ex.repeticoes) }}</td>
+                                <td class="td-rest text-right font-tabular">{{ formatRestSeconds(ex.descansoSegundos) }}</td>
+                                <td class="td-obs text-left">
+                                  <span class="obs-text" [class.is-empty]="!ex.observacoes">
+                                    {{ ex.observacoes || '—' }}
+                                  </span>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            </section>
+
+            <!-- 6. Seção 3: Plano Alimentar & Refeições -->
+            <section class="summary-section-block summary-section-diet" aria-labelledby="heading-dieta-resumo">
+              <div class="summary-section-header">
+                <h3 id="heading-dieta-resumo" class="block-title">3. PLANO ALIMENTAR & REFEIÇÕES</h3>
+              </div>
+
+              <div class="meals-summary-list">
+                @for (m of pl.dieta; track m.id) {
+                  @let mealTotals = getMealTotals(m);
+                  <article class="summary-meal-card" [attr.aria-label]="m.nome">
+                    <!-- Cabeçalho da Refeição -->
+                    <div class="meal-summary-top">
+                      <div class="meal-name-row">
+                        <h4 class="meal-heading-title">
+                          {{ m.nome.toUpperCase() }}{{ m.horario ? ' · ' + m.horario : '' }}
+                        </h4>
+                        @if (exportMode() === 'completa' && m.horario) {
+                          <span class="meal-time-badge">{{ m.horario }}</span>
+                        }
+                      </div>
+                      @if (exportMode() === 'completa') {
+                        <div class="meal-totals-subtext font-tabular">
+                          {{ formatKcal(mealTotals.calorias) }} kcal · Proteínas {{ formatGrams(mealTotals.proteinaG) }} g · Carboidratos {{ formatGrams(mealTotals.carboidratoG) }} g · Gorduras {{ formatGrams(mealTotals.gorduraG) }} g
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Versão Simples: 2 Colunas (Alimento | Quantidade) -->
+                    @if (exportMode() === 'simples') {
+                      <div class="summary-table-scroll-wrap">
+                        <table class="summary-table summary-food-table-simple" [attr.aria-label]="'Alimentos de ' + m.nome">
+                          <colgroup>
+                            <col />
+                            <col style="width: 140px" />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th scope="col" class="text-left">Alimento</th>
+                              <th scope="col" class="text-right">Quantidade</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @if (m.alimentos.length === 0) {
+                              <tr>
+                                <td colspan="2" class="text-center text-muted empty-cell-text">
+                                  Nenhum alimento cadastrado nesta refeição.
+                                </td>
+                              </tr>
+                            } @else {
+                              @for (f of m.alimentos; track f.id) {
+                                <tr class="summary-row">
+                                  <td class="text-left">
+                                    <span class="food-bullet">•</span> {{ f.nome }}
+                                  </td>
+                                  <td class="text-right font-tabular font-bold">
+                                    {{ formatInt(f.quantidadeG) }} g
+                                  </td>
+                                </tr>
+                              }
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    } @else {
+                      <!-- Versão Completa: Tabela Detalhada com Subtotal -->
+                      <div class="summary-table-scroll-wrap">
+                        <table class="summary-table summary-food-table" [attr.aria-label]="'Alimentos de ' + m.nome">
+                          <colgroup>
+                            <col class="col-num" />
+                            <col class="col-food-name" />
+                            <col class="col-food-metric" />
+                            <col class="col-food-metric" />
+                            <col class="col-food-metric" />
+                            <col class="col-food-metric" />
+                            <col class="col-food-metric" />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th scope="col" class="th-num text-center">#</th>
+                              <th scope="col" class="th-food-name text-left">Alimento</th>
+                              <th scope="col" class="th-food-metric text-right">Qtd (g)</th>
+                              <th scope="col" class="th-food-metric text-right">Kcal</th>
+                              <th scope="col" class="th-food-metric text-right">P (g)</th>
+                              <th scope="col" class="th-food-metric text-right">C (g)</th>
+                              <th scope="col" class="th-food-metric text-right">G (g)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @if (m.alimentos.length === 0) {
+                              <tr>
+                                <td colspan="7" class="text-center text-muted empty-cell-text">
+                                  Nenhum alimento cadastrado nesta refeição.
+                                </td>
+                              </tr>
+                            } @else {
+                              @for (f of m.alimentos; track f.id; let idx = $index) {
+                                <tr class="summary-row">
+                                  <td class="td-num text-center font-tabular">{{ idx + 1 }}</td>
+                                  <td class="td-food-name text-left">
+                                    <span class="food-name-full">{{ f.nome }}</span>
+                                  </td>
+                                  <td class="td-food-metric text-right font-tabular">{{ formatInt(f.quantidadeG) }}</td>
+                                  <td class="td-food-metric text-right font-tabular font-bold">{{ formatKcal(f.calorias) }}</td>
+                                  <td class="td-food-metric text-right font-tabular">{{ formatGrams(f.proteinaG) }}</td>
+                                  <td class="td-food-metric text-right font-tabular">{{ formatGrams(f.carboidratoG) }}</td>
+                                  <td class="td-food-metric text-right font-tabular">{{ formatGrams(f.gorduraG) }}</td>
+                                </tr>
+                              }
+                            }
+                          </tbody>
+                          @if (m.alimentos.length > 0) {
+                            <tfoot>
+                              <tr class="summary-tfoot-row">
+                                <td colspan="2" class="text-left font-bold tfoot-label">Total da Refeição</td>
+                                <td class="text-right text-muted">—</td>
+                                <td class="text-right font-bold tfoot-cal font-tabular">{{ formatKcal(mealTotals.calorias) }}</td>
+                                <td class="text-right font-bold font-tabular">{{ formatGrams(mealTotals.proteinaG) }}</td>
+                                <td class="text-right font-bold font-tabular">{{ formatGrams(mealTotals.carboidratoG) }}</td>
+                                <td class="text-right font-bold font-tabular">{{ formatGrams(mealTotals.gorduraG) }}</td>
+                              </tr>
+                            </tfoot>
+                          }
+                        </table>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+
+              <!-- Totais do Dia ao Final da Dieta -->
+              <div class="diet-day-totals-box font-tabular">
+                <span class="totals-title">TOTAIS DO DIA:</span>
+                <strong class="font-bold">{{ formatKcal(plannerService.dietTotals().calorias) }} kcal</strong>
+                <span class="tot-sep">·</span>
+                <span><strong style="color: var(--macro-protein)">{{ formatGrams(plannerService.dietTotals().proteina) }} g</strong> proteínas</span>
+                <span class="tot-sep">·</span>
+                <span><strong style="color: var(--macro-carb)">{{ formatGrams(plannerService.dietTotals().carbo) }} g</strong> carboidratos</span>
+                <span class="tot-sep">·</span>
+                <span><strong style="color: var(--macro-fat)">{{ formatGrams(plannerService.dietTotals().gordura) }} g</strong> gorduras</span>
+              </div>
+            </section>
+          </div>
+        }
+      </div>
+    }
+
+  </main>
+</div>

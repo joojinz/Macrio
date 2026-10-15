@@ -1,0 +1,278 @@
+<div class="modal-overlay" (mousedown)="backgroundClose($event)" role="dialog" aria-modal="true" aria-labelledby="register-title">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <button class="close-btn" (click)="close()" aria-label="Fechar">&times;</button>
+
+    <!-- Progress -->
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="(step / totalSteps) * 100"></div>
+    </div>
+    <p class="step-indicator">Passo {{ step }} de {{ totalSteps }}</p>
+
+    <!-- STEP 1: Conta -->
+    @if (step === 1 && !isSuccess) {
+      <div class="modal-header">
+        <img src="/icon.png" alt="Macrio" class="modal-logo">
+        <h2 id="register-title">CRIAR CONTA</h2>
+        <p class="modal-subtitle">Preencha seus dados de acesso</p>
+      </div>
+
+      <form class="register-form">
+        <div class="input-group">
+          <label for="r-nome">Nome completo</label>
+          <input type="text" id="r-nome" [(ngModel)]="form.nome" placeholder="João Silva" name="nome" autocomplete="name">
+        </div>
+        <div class="input-group">
+          <label for="r-email">E-mail</label>
+          <input type="email" id="r-email" [(ngModel)]="form.email" placeholder="seu@email.com" name="email" autocomplete="email">
+        </div>
+        <div class="input-group">
+          <label for="r-senha">Senha</label>
+          <input type="password" id="r-senha" [(ngModel)]="form.senha" placeholder="Min. 8 caracteres" name="senha" autocomplete="new-password" (input)="calcularForca()">
+          @if (form.senha) {
+            <div class="password-strength">
+              <div class="strength-bar">
+                <div class="strength-fill" [class]="forcaSenha.classe" [style.width.%]="forcaSenha.porcentagem"></div>
+              </div>
+              <span class="strength-label" [class]="forcaSenha.classe">{{ forcaSenha.texto }}</span>
+            </div>
+          }
+        </div>
+        <div class="input-group">
+          <label for="r-confirmar">Confirmar senha</label>
+          <input type="password" id="r-confirmar" [(ngModel)]="form.confirmarSenha" placeholder="Repita a senha" name="confirmarSenha" autocomplete="new-password">
+          @if (form.confirmarSenha && form.senha !== form.confirmarSenha) {
+            <span class="field-error">Senhas não coincidem</span>
+          }
+        </div>
+        <button type="button" class="btn-submit" (click)="proximoStep()" [disabled]="!step1Valido()">Continuar</button>
+
+        <div class="divider">
+          <span>ou</span>
+        </div>
+
+        <button type="button" class="btn-google" (click)="registerWithGoogle()" [disabled]="isGoogleLoading" aria-label="Criar conta com Google">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          {{ isGoogleLoading ? 'Conectando...' : 'Continuar com Google' }}
+        </button>
+
+        <p class="login-link">Já tem conta? <button type="button" class="link-btn" (click)="close(); modal.abrirLogin()">Entrar</button></p>
+      </form>
+    }
+
+    <!-- STEP 2: Tipo de usuario -->
+    @if (step === 2) {
+      <div class="modal-header">
+        <h2>COMO VOCÊ VAI USAR?</h2>
+        <p class="modal-subtitle">Isso nos ajuda a personalizar sua experiência</p>
+      </div>
+
+      <div class="tipo-cards">
+        <button type="button" class="tipo-card" [class.selected]="form.tipo === 'pessoal'" (click)="form.tipo = 'pessoal'">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="tipo-title">Para mim</span>
+          <span class="tipo-desc">Controle minha própria alimentação e treinos</span>
+        </button>
+        <button type="button" class="tipo-card" [class.selected]="form.tipo === 'nutricionista'" (click)="form.tipo = 'nutricionista'">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span class="tipo-title">Nutricionista</span>
+          <span class="tipo-desc">Gerencio alunos e crio planos alimentares</span>
+        </button>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" (click)="step = 1">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-submit" (click)="proximoStep()" [disabled]="!form.tipo">Continuar</button>
+      </div>
+    }
+
+    <!-- STEP 3: Dados Corporais & Métricas -->
+    @if (step === 3) {
+      <div class="modal-header">
+        <h2>DADOS CORPORAIS & BIOFÍSICA</h2>
+        <p class="modal-subtitle">Usamos a fórmula de Mifflin-St Jeor para calcular sua meta metabólica</p>
+      </div>
+
+      <form class="register-form">
+        <div class="grid-2col">
+          <div class="input-group">
+            <label for="r-peso">Peso (kg)</label>
+            <input type="number" id="r-peso" [(ngModel)]="form.pesoKg" name="pesoKg" min="20" max="400" step="0.5" placeholder="Ex: 75.5">
+          </div>
+          <div class="input-group">
+            <label for="r-altura">Altura (cm)</label>
+            <input type="number" id="r-altura" [(ngModel)]="form.alturaCm" name="alturaCm" min="80" max="250" placeholder="Ex: 178">
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <div class="input-group">
+            <label for="r-idade">Idade (anos)</label>
+            <input type="number" id="r-idade" [(ngModel)]="form.idade" name="idade" min="10" max="120" placeholder="Ex: 28">
+          </div>
+          <div class="input-group">
+            <label for="r-sexo">Sexo biológico</label>
+            <select id="r-sexo" [(ngModel)]="form.sexo" name="sexo" class="custom-select">
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="r-atividade">Nível de atividade física</label>
+          <select id="r-atividade" [(ngModel)]="form.nivelAtividade" name="nivelAtividade" class="custom-select">
+            <option value="sedentario">Sedentário (pouco ou nenhum exercício)</option>
+            <option value="leve">Leve (exercício 1 a 3 dias/semana)</option>
+            <option value="moderado">Moderado (exercício 3 a 5 dias/semana)</option>
+            <option value="intenso">Intenso (exercício pesado 6 a 7 dias/semana)</option>
+            <option value="muito_intenso">Muito intenso (atleta ou trabalho físico pesado)</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="r-objetivo">Objetivo principal</label>
+          <select id="r-objetivo" [(ngModel)]="form.objetivo" name="objetivo" class="custom-select">
+            <option value="perder_peso">Perder peso (-400 kcal déficit)</option>
+            <option value="manter">Manter peso (equilíbrio calórico)</option>
+            <option value="ganhar_massa">Ganhar massa muscular (+350 kcal superávit)</option>
+          </select>
+        </div>
+
+        <!-- Live Metrics Card Preview -->
+        @if (previewTmb > 0) {
+          <div class="metrics-preview-box">
+            <div class="metric-item">
+              <span class="m-label">TMB Basal</span>
+              <span class="m-val">{{ previewTmb }} <small>kcal</small></span>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">Gasto Diário</span>
+              <span class="m-val">{{ previewGastoTotal }} <small>kcal</small></span>
+            </div>
+            <div class="metric-item highlight">
+              <span class="m-label">Meta Calórica</span>
+              <span class="m-val">{{ previewCalorias }} <small>kcal</small></span>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">Água Diária</span>
+              <span class="m-val">{{ previewAgua }} <small>ml</small></span>
+            </div>
+          </div>
+        }
+
+        <div class="step-nav">
+          <button type="button" class="btn-back" (click)="step = 2">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar
+          </button>
+          <button type="button" class="btn-submit" (click)="proximoStep()" [disabled]="!step3Valido()">Continuar</button>
+        </div>
+      </form>
+    }
+
+    <!-- STEP 4: Planos -->
+    @if (step === 4) {
+      <div class="modal-header">
+        <h2>ESCOLHA SEU PLANO</h2>
+        <p class="modal-subtitle">Comece grátis, evolua quando quiser</p>
+      </div>
+
+      <div class="planos-grid">
+        <button type="button" class="plano-card" [class.selected]="form.plano === 'gratuito'" (click)="form.plano = 'gratuito'">
+          <span class="plano-name">GRATUITO</span>
+          <span class="plano-price">R$ 0<span class="plano-period">/mês</span></span>
+          <span class="plano-feature">&#10003; 1 perfil</span>
+          <span class="plano-feature">&#10003; Registro de refeições</span>
+          <span class="plano-feature">&#10003; Acompanhamento básico</span>
+          <span class="plano-feature dim">&#10007; Múltiplos perfis</span>
+          <span class="plano-feature dim">&#10007; Relatórios avançados</span>
+        </button>
+        <button type="button" class="plano-card" [class.selected]="form.plano === 'mensal'" (click)="form.plano = 'mensal'">
+          <span class="plano-badge">POPULAR</span>
+          <span class="plano-name">MENSAL</span>
+          <span class="plano-price">R$ 29,90<span class="plano-period">/mês</span></span>
+          <span class="plano-feature">&#10003; Perfis ilimitados</span>
+          <span class="plano-feature">&#10003; Acompanhamento completo</span>
+          <span class="plano-feature">&#10003; Múltiplos perfis</span>
+          <span class="plano-feature">&#10003; Relatórios avançados</span>
+        </button>
+        <button type="button" class="plano-card" [class.selected]="form.plano === 'anual'" (click)="form.plano = 'anual'">
+          <span class="plano-badge anual">-30%</span>
+          <span class="plano-name">ANUAL</span>
+          <span class="plano-price">R$ 20,90<span class="plano-period">/mês</span></span>
+          <span class="plano-sub">Cobrado R$ 250,80/ano</span>
+          <span class="plano-feature">&#10003; Tudo do Mensal</span>
+          <span class="plano-feature">&#10003; 30% de desconto</span>
+          <span class="plano-feature">&#10003; Suporte prioritário</span>
+          <span class="plano-feature">&#10003; Acesso antecipado</span>
+        </button>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" (click)="step = 3">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-submit" (click)="proximoStep()" [disabled]="!form.plano">Continuar</button>
+      </div>
+    }
+
+    <!-- STEP 5: Termos -->
+    @if (step === 5 && !isSuccess) {
+      <div class="modal-header">
+        <h2>QUASE LÁ!</h2>
+        <p class="modal-subtitle">Leia e aceite os termos para finalizar</p>
+      </div>
+
+      <div class="termos-box">
+        <p>Ao criar sua conta no <strong>Macrio</strong>, você concorda com o uso dos seus dados corporais para personalização de dietas e cálculo das metas biológicas. Seus dados estão seguros e nunca serão comercializados.</p>
+      </div>
+
+      <div class="checkboxes">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.aceitaTermos" name="termos">
+          <span>Aceito os <a href="#" (click)="$event.preventDefault()">Termos de Uso</a></span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.aceitaPrivacidade" name="privacidade">
+          <span>Aceito a <a href="#" (click)="$event.preventDefault()">Política de Privacidade</a></span>
+        </label>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-back" (click)="step = 4">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Voltar
+        </button>
+        <button type="button" class="btn-submit" (click)="finalizar()" [disabled]="!form.aceitaTermos || !form.aceitaPrivacidade || isSubmitting">
+          {{ isSubmitting ? 'Criando conta...' : 'Criar conta' }}
+        </button>
+      </div>
+      @if (erro) {
+        <span class="field-error">{{ erro }}</span>
+      }
+    }
+
+    <!-- SUCCESS -->
+    @if (isSuccess) {
+      <div class="success-content">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2>CONTA CRIADA COM SUCESSO!</h2>
+        <p>Sua conta está ativa e suas metas metabólicas foram calculadas. Você já pode entrar com <strong>{{ form.email }}</strong>.</p>
+        <button type="button" class="btn-submit" (click)="close()">Acessar Plataforma</button>
+      </div>
+    }
+
+  </div>
+</div>
