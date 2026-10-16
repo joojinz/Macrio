@@ -7,6 +7,12 @@ import { Navbar } from '../../navbar/navbar';
 import { AuthService } from '../../services/auth.service';
 import { PlannerService, WorkoutExercise, WorkoutDay, DietFoodItem, DietMeal, AiExerciseItem, sortMealsByTime, parseTimeToMinutes } from '../../services/planner.service';
 import { exportWorkoutPdf, exportDietPdf } from './planner-export.util';
+import {
+  formatWhatsAppTreino,
+  formatWhatsAppDieta,
+  formatWhatsAppResumo,
+  copyToClipboardWithFallback,
+} from './whatsapp-export.util';
 import { TacoFoodItem, searchTacoFoods, calculateNutrientsForWeight } from '../../services/taco-database';
 
 export interface ExercisePresetCategory {
@@ -88,6 +94,7 @@ export const CARD_TOOLTIPS: Record<string, CardTooltipInfo> = {
     '(window:resize)': 'onWindowResize()',
     '(document:keydown.escape)': 'onEscapeKey()',
     '(document:click)': 'onDocumentClick($event)',
+    '(document:pointerdown)': 'onDocumentPointerDown($event)',
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
 })
@@ -414,6 +421,8 @@ export class PlannerPage implements OnInit {
   isDownloadingDietPdf = signal<boolean>(false);
   exportMode = signal<'simples' | 'completa'>('simples');
   activeDropdown = signal<string | null>(null);
+  copiedItemKey = signal<string | null>(null);
+  dropdownFlipUp = signal<boolean>(false);
   printDocumentTarget = signal<'all' | 'treino' | 'alimentacao'>('all');
 
   hasWorkoutPlan = computed(() => {
@@ -691,6 +700,15 @@ export class PlannerPage implements OnInit {
       }
     }
     return diffs;
+  });
+
+  currentWaterGoalMl = computed(() => {
+    this.goalsFormVersion();
+    const formVal = Number(this.customGoalsForm?.get('metaAguaMl')?.value);
+    if (formVal && formVal > 0) return formVal;
+    const pl = this.plannerService.planner();
+    if (pl?.metasCustomizadas?.metaAguaMl) return pl.metasCustomizadas.metaAguaMl;
+    return 3000;
   });
 
   populateGoalsForm(goals: any) {
@@ -973,8 +991,23 @@ export class PlannerPage implements OnInit {
     this.hideCardTooltip(120);
   }
 
+  onDocumentPointerDown(event: PointerEvent) {
+    const target = event.target as HTMLElement | null;
+    if (this.activeDropdown()) {
+      if (!target || !target.closest('.header-more-wrapper')) {
+        this.closeDropdowns();
+      }
+    }
+  }
+
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement | null;
+
+    if (this.activeDropdown()) {
+      if (!target || !target.closest('.header-more-wrapper')) {
+        this.closeDropdowns();
+      }
+    }
 
     if (this.selectedExerciseId()) {
       if (!target || (!target.closest('[data-exercise-row]') && !target.closest('.touch-row-actions-bar'))) {
@@ -1963,6 +1996,16 @@ export class PlannerPage implements OnInit {
     }
   }
 
+  getDuplicateTimeMealName(meal: DietMeal): string | null {
+    if (!meal || !meal.horario) return null;
+    const meals = this.plannerService.planner()?.dieta;
+    if (!meals) return null;
+    const trimmed = meal.horario.trim();
+    if (!trimmed) return null;
+    const dup = meals.find((m) => m.id !== meal.id && m.horario && m.horario.trim() === trimmed);
+    return dup ? dup.nome : null;
+  }
+
   triggerMealHighlightAndScroll(mealId: string) {
     this.flashedMealId.set(mealId);
     if (this.flashMealTimeout) {
@@ -2446,6 +2489,12 @@ export class PlannerPage implements OnInit {
     return `${formatted} ${liters === 1 ? 'litro' : 'litros'}`;
   }
 
+  formatWaterNumber(ml: number | undefined | null): string {
+    if (!ml || ml <= 0) return '0';
+    const liters = ml / 1000;
+    return liters % 1 === 0 ? String(liters) : liters.toFixed(1).replace('.', ',');
+  }
+
   formatRepsSimple(val: string | undefined | null): string {
     if (!val) return '8 a 12';
     return String(val).replace(/(\d+)\s*[-–—]\s*(\d+)/g, '$1 a $2').trim();
@@ -2506,11 +2555,148 @@ export class PlannerPage implements OnInit {
       this.activeDropdown.set(null);
     } else {
       this.activeDropdown.set(type);
+      if (type === 'header-unified-more' && typeof window !== 'undefined') {
+        const btn = document.querySelector('.btn-header-more');
+        if (btn) {
+          const rect = btn.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - rect.bottom;
+          this.dropdownFlipUp.set(spaceBelow < 420 && rect.top > 420);
+        }
+        setTimeout(() => {
+          const first = document.querySelector<HTMLButtonElement>(
+            '.header-more-wrapper .dropdown-menu button[role="menuitem"]:not(:disabled)'
+          );
+          first?.focus();
+        }, 50);
+      }
     }
   }
 
   closeDropdowns() {
     this.activeDropdown.set(null);
+  }
+
+  handleMenuKeydown(event: KeyboardEvent) {
+    const menu = event.currentTarget as HTMLElement;
+    if (!menu) return;
+    const items = Array.from(
+      menu.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]:not(:disabled)')
+    );
+    if (items.length === 0) return;
+
+    const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault();
+        const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+        items[nextIndex]?.focus();
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+        items[prevIndex]?.focus();
+        break;
+      }
+      case 'Home': {
+        event.preventDefault();
+        items[0]?.focus();
+        break;
+      }
+      case 'End': {
+        event.preventDefault();
+        items[items.length - 1]?.focus();
+        break;
+      }
+      case 'Escape': {
+        event.preventDefault();
+        this.closeDropdowns();
+        const btn = document.querySelector<HTMLButtonElement>('.btn-header-more');
+        btn?.focus();
+        break;
+      }
+      case 'Tab': {
+        setTimeout(() => {
+          if (!menu.contains(document.activeElement)) {
+            this.closeDropdowns();
+          }
+        }, 0);
+        break;
+      }
+    }
+  }
+
+  async copyWhatsApp(target: 'treino' | 'alimentacao' | 'resumo') {
+    const pl = this.plannerService.planner();
+    if (!pl) return;
+
+    const mode = this.exportMode();
+    const water = this.currentWaterGoalMl();
+    let text = '';
+
+    if (target === 'treino') {
+      if (!this.hasWorkoutPlan()) return;
+      text = formatWhatsAppTreino(pl, mode);
+    } else if (target === 'alimentacao') {
+      if (!this.hasDietPlan()) return;
+      text = formatWhatsAppDieta(pl, mode, water);
+    } else {
+      if (!this.hasWorkoutPlan() && !this.hasDietPlan()) return;
+      text = formatWhatsAppResumo(pl, mode, water);
+    }
+
+    if (!text) return;
+
+    this.copiedItemKey.set(`copy-${target}`);
+
+    const success = await copyToClipboardWithFallback(text);
+    if (success) {
+      if (text.length > 3500) {
+        this.copyFeedback.set('Copiado! Texto longo, considere enviar em partes');
+      } else {
+        this.copyFeedback.set('Copiado! Cole no WhatsApp');
+      }
+    } else {
+      this.copyFeedback.set('Não foi possível copiar. Tente de novo.');
+    }
+
+    setTimeout(() => {
+      this.copiedItemKey.set(null);
+      this.closeDropdowns();
+    }, 1500);
+
+    setTimeout(() => {
+      this.copyFeedback.set(null);
+    }, 3000);
+  }
+
+  openWhatsApp(target: 'treino' | 'alimentacao' | 'resumo' = 'resumo') {
+    const pl = this.plannerService.planner();
+    if (!pl) return;
+
+    const mode = this.exportMode();
+    const water = this.currentWaterGoalMl();
+    let text = '';
+
+    if (target === 'treino') {
+      if (!this.hasWorkoutPlan()) return;
+      text = formatWhatsAppTreino(pl, mode);
+    } else if (target === 'alimentacao') {
+      if (!this.hasDietPlan()) return;
+      text = formatWhatsAppDieta(pl, mode, water);
+    } else {
+      if (!this.hasWorkoutPlan() && !this.hasDietPlan()) return;
+      text = formatWhatsAppResumo(pl, mode, water);
+    }
+
+    if (!text) return;
+
+    this.closeDropdowns();
+    if (typeof window !== 'undefined') {
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 
   retryExport(type: 'treino' | 'alimentacao') {

@@ -16,67 +16,146 @@
       </div>
 
       <div class="header-right">
-        <!-- Menu [⋯ Mais] Dropdown (Compartilhar, Imprimir) - Idêntico em todas as abas -->
-        <div class="dropdown-wrapper header-more-wrapper" (keydown)="onDropdownKeydown($event)">
+        <!-- Menu [⋯ Mais] Dropdown (Compartilhar, Copiar para WhatsApp, Imprimir) - Idêntico em todas as abas -->
+        <div class="dropdown-wrapper header-more-wrapper">
           <button 
             type="button" 
             class="btn-secondary-action btn-header-more"
             (click)="toggleDropdown('header-unified-more')"
             [class.active]="activeDropdown() === 'header-unified-more'"
-            title="Mais opções de exportação, compartilhamento e impressão"
+            title="Mais opções de compartilhamento, cópia e impressão"
             aria-label="Mais opções"
-            aria-haspopup="true"
+            aria-haspopup="menu"
             [attr.aria-expanded]="activeDropdown() === 'header-unified-more'">
             <mat-icon>more_horiz</mat-icon>
             <span>Mais</span>
-            <mat-icon class="caret-icon">expand_more</mat-icon>
+            <mat-icon class="caret-icon" [class.rotated]="activeDropdown() === 'header-unified-more'">expand_more</mat-icon>
           </button>
+
           @if (activeDropdown() === 'header-unified-more') {
-            <div class="dropdown-menu" role="menu">
+            <div 
+              class="dropdown-menu" 
+              [class.flip-up]="dropdownFlipUp()"
+              role="menu"
+              aria-label="Opções adicionais"
+              (keydown)="handleMenuKeydown($event)">
+
+              <!-- Grupo 1: Compartilhar -->
+              <div class="dropdown-group-label">Compartilhar</div>
               <button 
                 type="button" 
                 class="dropdown-item" 
                 role="menuitem"
                 [disabled]="!hasWorkoutPlan()"
+                [title]="!hasWorkoutPlan() ? 'Nada cadastrado ainda' : 'Compartilhar treino via sistema'"
                 (click)="sharePlan('treino'); closeDropdowns()">
                 <mat-icon>share</mat-icon>
-                <span>Compartilhar Treino</span>
+                <span>Compartilhar treino</span>
               </button>
               <button 
                 type="button" 
                 class="dropdown-item" 
                 role="menuitem"
                 [disabled]="!hasDietPlan()"
+                [title]="!hasDietPlan() ? 'Nada cadastrado ainda' : 'Compartilhar alimentação via sistema'"
                 (click)="sharePlan('alimentacao'); closeDropdowns()">
                 <mat-icon>share</mat-icon>
-                <span>Compartilhar Alimentação</span>
+                <span>Compartilhar alimentação</span>
               </button>
-              <div class="dropdown-menu-divider"></div>
+
+              <div class="dropdown-menu-divider" role="separator"></div>
+
+              <!-- Grupo 2: Copiar para WhatsApp -->
+              <div class="dropdown-group-label">Copiar</div>
               <button 
                 type="button" 
                 class="dropdown-item" 
                 role="menuitem"
                 [disabled]="!hasWorkoutPlan()"
-                (click)="printPlan('treino'); closeDropdowns()">
-                <mat-icon>print</mat-icon>
-                <span>Imprimir Treino</span>
+                [title]="!hasWorkoutPlan() ? 'Nada cadastrado ainda' : 'Copiar treino formatado para WhatsApp'"
+                (click)="copyWhatsApp('treino')">
+                @if (copiedItemKey() === 'copy-treino') {
+                  <mat-icon class="icon-copied">check</mat-icon>
+                  <span class="text-copied">Copiado ✓</span>
+                } @else {
+                  <mat-icon>content_copy</mat-icon>
+                  <span>Copiar treino</span>
+                }
               </button>
               <button 
                 type="button" 
                 class="dropdown-item" 
                 role="menuitem"
                 [disabled]="!hasDietPlan()"
-                (click)="printPlan('alimentacao'); closeDropdowns()">
-                <mat-icon>print</mat-icon>
-                <span>Imprimir Alimentação</span>
+                [title]="!hasDietPlan() ? 'Nada cadastrado ainda' : 'Copiar alimentação formatada para WhatsApp'"
+                (click)="copyWhatsApp('alimentacao')">
+                @if (copiedItemKey() === 'copy-alimentacao') {
+                  <mat-icon class="icon-copied">check</mat-icon>
+                  <span class="text-copied">Copiado ✓</span>
+                } @else {
+                  <mat-icon>content_copy</mat-icon>
+                  <span>Copiar alimentação</span>
+                }
               </button>
               <button 
                 type="button" 
                 class="dropdown-item" 
                 role="menuitem"
+                [disabled]="!hasWorkoutPlan() && !hasDietPlan()"
+                [title]="!hasWorkoutPlan() && !hasDietPlan() ? 'Nada cadastrado ainda' : 'Copiar resumo geral formatado para WhatsApp'"
+                (click)="copyWhatsApp('resumo')">
+                @if (copiedItemKey() === 'copy-resumo') {
+                  <mat-icon class="icon-copied">check</mat-icon>
+                  <span class="text-copied">Copiado ✓</span>
+                } @else {
+                  <mat-icon>content_copy</mat-icon>
+                  <span>Copiar resumo</span>
+                }
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasWorkoutPlan() && !hasDietPlan()"
+                [title]="!hasWorkoutPlan() && !hasDietPlan() ? 'Nada cadastrado ainda' : 'Abrir resumo no WhatsApp'"
+                (click)="openWhatsApp('resumo')">
+                <mat-icon>chat</mat-icon>
+                <span>Abrir no WhatsApp</span>
+              </button>
+
+              <div class="dropdown-menu-divider" role="separator"></div>
+
+              <!-- Grupo 3: Imprimir -->
+              <div class="dropdown-group-label">Imprimir</div>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasWorkoutPlan()"
+                [title]="!hasWorkoutPlan() ? 'Nada cadastrado ainda' : 'Imprimir treino'"
+                (click)="printPlan('treino'); closeDropdowns()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir treino</span>
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasDietPlan()"
+                [title]="!hasDietPlan() ? 'Nada cadastrado ainda' : 'Imprimir alimentação'"
+                (click)="printPlan('alimentacao'); closeDropdowns()">
+                <mat-icon>print</mat-icon>
+                <span>Imprimir alimentação</span>
+              </button>
+              <button 
+                type="button" 
+                class="dropdown-item" 
+                role="menuitem"
+                [disabled]="!hasWorkoutPlan() && !hasDietPlan()"
+                [title]="!hasWorkoutPlan() && !hasDietPlan() ? 'Nada cadastrado ainda' : 'Imprimir ficha completa'"
                 (click)="printPlan('all'); closeDropdowns()">
                 <mat-icon>print</mat-icon>
-                <span>Imprimir Ficha Completa</span>
+                <span>Imprimir ficha completa</span>
               </button>
             </div>
           }
@@ -2345,7 +2424,6 @@
           <!-- Card de Treino -->
           <div class="export-hub-panel workout-hub-panel">
             <div class="hub-panel-header">
-              <span class="hub-tag">EXPORTAÇÃO DE TREINO</span>
               <h3 class="hub-title">Plano de Treino</h3>
               <p class="hub-desc">Ficha completa de exercícios, séries e dicas biomecânicas (sem dados de dieta ou macros).</p>
             </div>
@@ -2353,7 +2431,7 @@
             <div class="hub-panel-actions">
               <button 
                 type="button" 
-                class="btn-primary-action btn-export-hub-pdf" 
+                class="btn-export-hub-pdf" 
                 (click)="downloadWorkoutPdf()"
                 [disabled]="!hasWorkoutPlan() || isDownloadingWorkoutPdf()"
                 [attr.aria-busy]="isDownloadingWorkoutPdf()"
@@ -2368,36 +2446,31 @@
                 }
               </button>
 
-              <div class="hub-secondary-actions">
-                <button 
-                  type="button" 
-                  class="btn-secondary-action btn-hub-sec"
-                  [disabled]="!hasWorkoutPlan()"
-                  (click)="sharePlan('treino')"
-                  title="Compartilhar plano de treino"
-                  aria-label="Compartilhar plano de treino">
-                  <mat-icon>share</mat-icon>
-                  <span>Compartilhar</span>
-                </button>
+              <button 
+                type="button" 
+                class="btn-icon-export"
+                [disabled]="!hasWorkoutPlan()"
+                (click)="sharePlan('treino')"
+                title="Compartilhar plano de treino"
+                aria-label="Compartilhar plano de treino">
+                <mat-icon>share</mat-icon>
+              </button>
 
-                <button 
-                  type="button" 
-                  class="btn-secondary-action btn-hub-sec"
-                  [disabled]="!hasWorkoutPlan()"
-                  (click)="printPlan('treino')"
-                  title="Imprimir plano de treino"
-                  aria-label="Imprimir plano de treino">
-                  <mat-icon>print</mat-icon>
-                  <span>Imprimir</span>
-                </button>
-              </div>
+              <button 
+                type="button" 
+                class="btn-icon-export"
+                [disabled]="!hasWorkoutPlan()"
+                (click)="printPlan('treino')"
+                title="Imprimir plano de treino"
+                aria-label="Imprimir plano de treino">
+                <mat-icon>print</mat-icon>
+              </button>
             </div>
           </div>
 
           <!-- Card de Alimentação -->
           <div class="export-hub-panel diet-hub-panel">
             <div class="hub-panel-header">
-              <span class="hub-tag">EXPORTAÇÃO DE ALIMENTAÇÃO</span>
               <h3 class="hub-title">Plano de Alimentação</h3>
               <p class="hub-desc">Cardápio do dia, horários, macros e água (sem exercícios ou séries de treino).</p>
             </div>
@@ -2405,7 +2478,7 @@
             <div class="hub-panel-actions">
               <button 
                 type="button" 
-                class="btn-primary-action btn-export-hub-pdf" 
+                class="btn-export-hub-pdf" 
                 (click)="downloadDietPdf()"
                 [disabled]="!hasDietPlan() || isDownloadingDietPdf()"
                 [attr.aria-busy]="isDownloadingDietPdf()"
@@ -2420,61 +2493,74 @@
                 }
               </button>
 
-              <div class="hub-secondary-actions">
-                <button 
-                  type="button" 
-                  class="btn-secondary-action btn-hub-sec"
-                  [disabled]="!hasDietPlan()"
-                  (click)="sharePlan('alimentacao')"
-                  title="Compartilhar plano de alimentação"
-                  aria-label="Compartilhar plano de alimentação">
-                  <mat-icon>share</mat-icon>
-                  <span>Compartilhar</span>
-                </button>
+              <button 
+                type="button" 
+                class="btn-icon-export"
+                [disabled]="!hasDietPlan()"
+                (click)="sharePlan('alimentacao')"
+                title="Compartilhar plano de alimentação"
+                aria-label="Compartilhar plano de alimentação">
+                <mat-icon>share</mat-icon>
+              </button>
 
-                <button 
-                  type="button" 
-                  class="btn-secondary-action btn-hub-sec"
-                  [disabled]="!hasDietPlan()"
-                  (click)="printPlan('alimentacao')"
-                  title="Imprimir plano de alimentação"
-                  aria-label="Imprimir plano de alimentação">
-                  <mat-icon>print</mat-icon>
-                  <span>Imprimir</span>
-                </button>
-              </div>
+              <button 
+                type="button" 
+                class="btn-icon-export"
+                [disabled]="!hasDietPlan()"
+                (click)="printPlan('alimentacao')"
+                title="Imprimir plano de alimentação"
+                aria-label="Imprimir plano de alimentação">
+                <mat-icon>print</mat-icon>
+              </button>
             </div>
           </div>
         </div>
 
         @if (plannerService.planner(); as pl) {
           <div class="summary-content-stack">
-            <!-- 3. Banner Resumo Geral -->
-            <div class="plan-summary-banner" aria-label="Seu plano em resumo">
-              <span class="summary-banner-badge">SEU PLANO EM RESUMO</span>
-              <div class="summary-banner-content font-tabular">
-                <span>{{ pl.treinos.length }} {{ pl.treinos.length === 1 ? 'treino' : 'treinos' }}</span>
-                @if (workoutLettersSummary) {
-                  <span class="workout-letters">({{ workoutLettersSummary }})</span>
-                }
-                <span class="banner-sep">·</span>
-                <span>{{ pl.dieta.length }} {{ pl.dieta.length === 1 ? 'refeição' : 'refeições' }} por dia</span>
-                <span class="banner-sep">·</span>
-                <span>{{ formatWaterLiters(pl.metasCustomizadas.metaAguaMl) }} de água por dia</span>
+            <!-- 3. Mini-stats do Plano em Resumo (3 cards padronizados) -->
+            <div class="summary-mini-stats-grid" aria-label="Resumo geral do plano">
+              <div 
+                class="mini-stat-card" 
+                [title]="workoutLettersSummary ? 'Treinos cadastrados: ' + workoutLettersSummary : 'Treinos na semana'">
+                <mat-icon class="mini-stat-icon">fitness_center</mat-icon>
+                <div class="mini-stat-metric">
+                  <span class="mini-stat-num font-tabular">{{ pl.treinos.length }}</span>
+                  <span class="mini-stat-unit">{{ pl.treinos.length === 1 ? 'treino' : 'treinos' }}</span>
+                </div>
+                <div class="mini-stat-label">Treinos na semana</div>
+              </div>
+
+              <div class="mini-stat-card" title="Refeições diárias cadastradas na dieta">
+                <mat-icon class="mini-stat-icon">restaurant</mat-icon>
+                <div class="mini-stat-metric">
+                  <span class="mini-stat-num font-tabular">{{ pl.dieta.length }}</span>
+                  <span class="mini-stat-unit">{{ pl.dieta.length === 1 ? 'refeição' : 'refeições' }}</span>
+                </div>
+                <div class="mini-stat-label">Refeições por dia</div>
+              </div>
+
+              <div class="mini-stat-card" title="Meta de hidratação diária da aba Metas">
+                <mat-icon class="mini-stat-icon">water_drop</mat-icon>
+                <div class="mini-stat-metric">
+                  <span class="mini-stat-num font-tabular">{{ formatWaterNumber(currentWaterGoalMl()) }}</span>
+                  <span class="mini-stat-unit">L</span>
+                </div>
+                <div class="mini-stat-label">Água por dia</div>
               </div>
             </div>
 
             <!-- 4. Seção 1: Metas do Dia -->
             <section class="summary-section-block metas-dia-section" aria-labelledby="heading-metas-resumo">
               <div class="summary-section-header">
-                <h3 id="heading-metas-resumo" class="block-title">1. METAS DO DIA</h3>
+                <h3 id="heading-metas-resumo" class="block-title">Metas do dia</h3>
               </div>
 
-              <!-- Grid de 4 Cards com Números Grandes e Unidades Alinhadas -->
+              <!-- Grid de Metas do Dia (Calorias span 2 + 3 macros com ponto de cor) -->
               <div class="metas-dia-grid">
-                <!-- Calorias -->
-                <div class="meta-dia-card">
-                  <span class="meta-dia-label">CALORIAS</span>
+                <!-- Calorias (span 2) -->
+                <div class="meta-dia-card card-calorias">
+                  <span class="meta-dia-label">Calorias</span>
                   <div class="meta-dia-metric-wrap">
                     <span class="meta-dia-num font-tabular">{{ formatKcal(pl.metasCustomizadas.calorias) }}</span>
                     <span class="meta-dia-unit">kcal/dia</span>
@@ -2484,7 +2570,10 @@
 
                 <!-- Proteínas -->
                 <div class="meta-dia-card">
-                  <span class="meta-dia-label">PROTEÍNAS</span>
+                  <span class="meta-dia-label">
+                    <span class="macro-color-dot dot-protein" aria-hidden="true"></span>
+                    Proteínas
+                  </span>
                   <div class="meta-dia-metric-wrap">
                     <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.proteinaG) }}</span>
                     <span class="meta-dia-unit">g</span>
@@ -2494,7 +2583,10 @@
 
                 <!-- Carboidratos -->
                 <div class="meta-dia-card">
-                  <span class="meta-dia-label">CARBOIDRATOS</span>
+                  <span class="meta-dia-label">
+                    <span class="macro-color-dot dot-carb" aria-hidden="true"></span>
+                    Carboidratos
+                  </span>
                   <div class="meta-dia-metric-wrap">
                     <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.carboidratoG) }}</span>
                     <span class="meta-dia-unit">g</span>
@@ -2504,7 +2596,10 @@
 
                 <!-- Gorduras -->
                 <div class="meta-dia-card">
-                  <span class="meta-dia-label">GORDURAS</span>
+                  <span class="meta-dia-label">
+                    <span class="macro-color-dot dot-fat" aria-hidden="true"></span>
+                    Gorduras
+                  </span>
                   <div class="meta-dia-metric-wrap">
                     <span class="meta-dia-num font-tabular">{{ formatInt(pl.metasCustomizadas.gorduraG) }}</span>
                     <span class="meta-dia-unit">g</span>
@@ -2553,8 +2648,8 @@
             <!-- 5. Seção 2: Rotina de Treinos -->
             <section class="summary-section-block summary-section-workout" aria-labelledby="heading-treinos-resumo">
               <div class="summary-section-header">
-                <h3 id="heading-treinos-resumo" class="block-title">2. ROTINA DE TREINOS</h3>
-                <span class="section-count-badge font-tabular">{{ pl.treinos.length }} sessões cadastradas</span>
+                <h3 id="heading-treinos-resumo" class="block-title">Rotina de treinos</h3>
+                <span class="section-count-text font-tabular">{{ pl.treinos.length }} sessões cadastradas</span>
               </div>
 
               <!-- Legenda Única de 3 Linhas (Apenas na Versão Simples) -->
@@ -2609,9 +2704,9 @@
                             <tr>
                               <th scope="col" class="th-num text-center">#</th>
                               <th scope="col" class="th-exercise-name text-left">Exercício</th>
-                              <th scope="col" class="th-sets text-right">Séries</th>
-                              <th scope="col" class="th-reps text-right">Repetições</th>
-                              <th scope="col" class="th-rest text-right">Descanso</th>
+                              <th scope="col" class="th-sets text-center">Séries</th>
+                              <th scope="col" class="th-reps text-center">Repetições</th>
+                              <th scope="col" class="th-rest text-center">Descanso</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2626,9 +2721,9 @@
                                     </div>
                                   }
                                 </td>
-                                <td class="td-sets text-right font-tabular font-bold">{{ ex.series }}</td>
-                                <td class="td-reps text-right font-tabular font-bold">{{ formatRepsSimple(ex.repeticoes) }}</td>
-                                <td class="td-rest text-right font-tabular">{{ formatRestSimple(ex.descansoSegundos) }}</td>
+                                <td class="td-sets text-center font-tabular font-bold">{{ ex.series }}</td>
+                                <td class="td-reps text-center font-tabular font-bold">{{ formatRepsSimple(ex.repeticoes) }}</td>
+                                <td class="td-rest text-center font-tabular">{{ formatRestSimple(ex.descansoSegundos) }}</td>
                               </tr>
                             }
                           </tbody>
@@ -2650,9 +2745,9 @@
                             <tr>
                               <th scope="col" class="th-num text-center">#</th>
                               <th scope="col" class="th-exercise-name text-left">Exercício</th>
-                              <th scope="col" class="th-sets text-right">Séries</th>
-                              <th scope="col" class="th-reps text-right">Reps</th>
-                              <th scope="col" class="th-rest text-right">Descanso</th>
+                              <th scope="col" class="th-sets text-center">Séries</th>
+                              <th scope="col" class="th-reps text-center">Reps</th>
+                              <th scope="col" class="th-rest text-center">Descanso</th>
                               <th scope="col" class="th-obs text-left">Observações</th>
                             </tr>
                           </thead>
@@ -2664,9 +2759,9 @@
                                   <div class="exercise-name-primary">{{ ex.nome }}</div>
                                   <div class="exercise-muscle-secondary">{{ ex.grupoMuscular }}</div>
                                 </td>
-                                <td class="td-sets text-right font-tabular font-bold">{{ ex.series }}</td>
-                                <td class="td-reps text-right font-tabular">{{ formatReps(ex.repeticoes) }}</td>
-                                <td class="td-rest text-right font-tabular">{{ formatRestSeconds(ex.descansoSegundos) }}</td>
+                                <td class="td-sets text-center font-tabular font-bold">{{ ex.series }}</td>
+                                <td class="td-reps text-center font-tabular">{{ formatReps(ex.repeticoes) }}</td>
+                                <td class="td-rest text-center font-tabular">{{ formatRestSeconds(ex.descansoSegundos) }}</td>
                                 <td class="td-obs text-left">
                                   <span class="obs-text" [class.is-empty]="!ex.observacoes">
                                     {{ ex.observacoes || '—' }}
@@ -2686,7 +2781,7 @@
             <!-- 6. Seção 3: Plano Alimentar & Refeições -->
             <section class="summary-section-block summary-section-diet" aria-labelledby="heading-dieta-resumo">
               <div class="summary-section-header">
-                <h3 id="heading-dieta-resumo" class="block-title">3. PLANO ALIMENTAR & REFEIÇÕES</h3>
+                <h3 id="heading-dieta-resumo" class="block-title">Plano alimentar e refeições</h3>
               </div>
 
               <div class="meals-summary-list">
